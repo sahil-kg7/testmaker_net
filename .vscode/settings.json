@@ -1,0 +1,13 @@
+{
+    "dotnet.defaultSolution": "testmaker_net.sln",
+    "omnisharp.dotNetCliPaths": [
+        "/home/abcd/.dotnet/dotnet"
+    ],
+    "omnisharp.sdkPath": "/home/abcd/.dotnet",
+    "dotnetAcquisitionExtension.existingDotnetPath": [
+        {
+            "extensionId": "ms-dotnettools.csharp",
+            "path": "/home/abcd/.dotnet/dotnet"
+        }
+    ]
+}
