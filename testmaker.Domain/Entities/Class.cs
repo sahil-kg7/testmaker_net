@@ -3,16 +3,11 @@ using System.Collections.Generic;
 
 namespace testmaker.Domain.Entities;
 
-/// <summary>
-/// contains records of schools enlisted with app
-/// </summary>
-public partial class School
+public partial class Class
 {
-    public Guid Id { get; set; }
+    public int ClassNumber { get; set; }
 
-    public string Name { get; set; } = null!;
-
-    public string? LogoFilename { get; set; }
+    public string ClassRoman { get; set; } = null!;
 
     public DateTime CreatedOn { get; set; }
 

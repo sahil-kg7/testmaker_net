@@ -2,7 +2,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\testmaker.Domain\testmaker.Domain.csproj" />
-    <ProjectReference Include="..\testmaker.Infrastructure\testmaker.Infrastructure.csproj" />
   </ItemGroup>
 
   <PropertyGroup>
