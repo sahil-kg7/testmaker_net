@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using testmaker.Domain.Entities;
-using testmaker.Infrastructure.Interfaces;
+using testmaker.Application.Common.Interfaces;
 
 namespace testmaker.Infrastructure.Persistence;
 

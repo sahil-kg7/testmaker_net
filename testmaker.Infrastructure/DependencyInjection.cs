@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using testmaker.Infrastructure.Interfaces;
+using testmaker.Application.Common.Interfaces;
 using testmaker.Infrastructure.Persistence;
 
 namespace testmaker.Infrastructure;

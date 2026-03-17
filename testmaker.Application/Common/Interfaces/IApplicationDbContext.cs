@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using testmaker.Domain.Entities;
 
-namespace testmaker.Infrastructure.Interfaces;
+namespace testmaker.Application.Common.Interfaces;
 
 public interface IApplicationDbContext
 {
