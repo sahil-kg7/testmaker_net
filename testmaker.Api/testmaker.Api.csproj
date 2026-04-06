@@ -8,10 +8,10 @@
 
   <ItemGroup>
     <ProjectReference Include="..\testmaker.Application\testmaker.Application.csproj" />
+    <ProjectReference Include="..\testmaker.Infrastructure\testmaker.Infrastructure.csproj" />
   </ItemGroup>
   
   <ItemGroup>
-    <PackageReference Include="MediatR" />
     <PackageReference Include="Swashbuckle.AspNetCore.Swagger" />
     <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" />
     <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" />

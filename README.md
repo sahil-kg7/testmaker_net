@@ -7,18 +7,18 @@ This README documents two things separately:
 1. The architecture that exists in the repository today.
 2. The intended target architecture discussed during project design.
 
-That split is deliberate. The codebase already has a solid persistence foundation, but the CQRS and vertical-slice application flow is still being built out.
+That split is deliberate. The codebase now has working startup wiring, MediatR-based request handling, validation behavior, exception middleware, and a first vertical slice for Classes, while the broader domain is still being migrated into the same pattern.
 
 ## Architecture Overview
 
 The solution currently follows a layered structure:
 
 - `testmaker.Domain`: core entity model.
-- `testmaker.Application`: placeholder application layer for future CQRS handlers and shared application concerns.
+- `testmaker.Application`: commands, queries, handlers, validators, behaviors, shared result types, and application abstractions.
 - `testmaker.Infrastructure`: EF Core persistence, database configuration, and infrastructure DI registration.
-- `testmaker.Api`: ASP.NET Core host, Swagger, and top-level HTTP pipeline.
+- `testmaker.Api`: ASP.NET Core host, controllers, middleware, Swagger, and top-level HTTP pipeline.
 
-The long-term direction is a cleaner CQRS-based structure where the API project contains endpoints only, the Application project contains commands, queries, handlers, and validators, the Domain project contains entities and core rules, and Infrastructure implements persistence and external services.
+The long-term direction remains a cleaner CQRS-based structure where the API project contains endpoints only, the Application project contains commands, queries, handlers, and validators organized by feature, the Domain project contains entities and core rules, and Infrastructure implements persistence and external services.
 
 ## Current Solution Structure
 
@@ -26,14 +26,26 @@ The long-term direction is a cleaner CQRS-based structure where the API project 
 testmaker_net/
 ├── testmaker.Api/
 │   ├── Features/
+│   │   └── Classes/
+│   │       └── ClassesController.cs
+│   ├── Middleware/
+│   │   └── ExceptionHandlingMiddleware.cs
 │   ├── Properties/
 │   ├── Program.cs
 │   ├── appsettings.json
 │   └── testmaker.Api.csproj
 ├── testmaker.Application/
 │   ├── Common/
-│   │   └── Interfaces/
+│   │   ├── Behaviors/
+│   │   │   └── ValidationBehavior.cs
+│   │   ├── Interfaces/
+│   │   │   └── IApplicationDbContext.cs
+│   │   └── Result.cs
 │   ├── Features/
+│   │   └── Classes/
+│   │       ├── Commands/
+│   │       └── Queries/
+│   ├── DependencyInjection.cs
 │   └── testmaker.Application.csproj
 ├── testmaker.Domain/
 │   ├── Common/
@@ -61,35 +73,48 @@ testmaker_net/
 - question details, question types, difficulty, and images
 - mapping entities such as test-question, test-section, and subquestion mappings
 
-These entities are represented as plain domain classes and are currently the main source of business data structure.
+These entities are represented as plain domain classes and remain the main source of business data structure.
 
 ### Application
 
-`testmaker.Application` exists as the intended home for application use cases, but it is still only lightly implemented. The `Common` and `Features` folders are present, and the repository now defines the `IApplicationDbContext` abstraction there, but it does not yet contain command handlers, query handlers, validators, or broader application wiring.
+`testmaker.Application` is now active and no longer only an architectural placeholder. It currently contains:
 
-Today, this means the Application layer describes architectural intent more than current behavior.
+- `Common/Interfaces/IApplicationDbContext.cs` as the persistence abstraction used by handlers
+- `Common/Behaviors/ValidationBehavior.cs` as a MediatR pipeline behavior that runs FluentValidation validators before handlers execute
+- `Common/Result.cs` with `Result` and `Result<T>` for expected business failures
+- `DependencyInjection.cs` with `AddApplication()` for registering MediatR, validators, and pipeline behaviors
+- the first feature slice under `Features/Classes/`
+
+The current error-handling model is hybrid by design:
+
+- expected business failures are returned through `Result` / `Result<T>`
+- validation failures are thrown as `ValidationException` from the validation behavior
+- unexpected runtime failures bubble out to API middleware
+
+`IApplicationDbContext` now exposes both entity sets and `SaveChangesAsync`, so handlers can perform persistence through the Application-defined abstraction instead of depending on Infrastructure types.
 
 ### Infrastructure
 
-`testmaker.Infrastructure` is where the current implementation is strongest:
+`testmaker.Infrastructure` remains the strongest persistence-focused layer. It provides:
 
-- `Persistence/ApplicationDbContext.cs` defines the EF Core `DbContext`
-- `Persistence/Configurations/*` contains entity configuration classes
-- `DependencyInjection.cs` registers the database context and the persistence abstraction
-- `Application` now defines `Common/Interfaces/IApplicationDbContext.cs`, which Infrastructure implements
+- `Persistence/ApplicationDbContext.cs` as the EF Core `DbContext`
+- `Persistence/Configurations/*` as entity configuration classes
+- `DependencyInjection.cs` with `AddInfrastructure(IConfiguration)`
+- the implementation behind the `IApplicationDbContext` abstraction defined in Application
 
 Infrastructure uses EF Core with Pomelo for MySQL and central package management through `Directory.Packages.props`.
 
 ### API
 
-`testmaker.Api` is the ASP.NET Core host. It currently provides:
+`testmaker.Api` is now more than host setup. It currently provides:
 
 - controller registration through `AddControllers()`
 - OpenAPI/Swagger registration
-- MediatR registration
-- the main HTTP pipeline in `Program.cs`
+- startup wiring for `AddApplication()` and `AddInfrastructure(builder.Configuration)`
+- global exception handling through `ExceptionHandlingMiddleware`
+- the first feature controller: `Features/Classes/ClassesController.cs`
 
-At the moment, the API project is mostly host setup. There are no controller files or feature endpoint implementations in the repository yet.
+The current API layer is still intentionally thin. Controllers dispatch commands and queries through `ISender` and translate `Result` failures into HTTP responses, while middleware handles validation and unexpected exceptions centrally.
 
 ## Dependency Direction
 
@@ -99,19 +124,26 @@ The code currently compiles with this dependency flow:
 
 ```text
 testmaker.Api -> testmaker.Application
+testmaker.Api -> testmaker.Infrastructure
 testmaker.Application -> testmaker.Domain
 testmaker.Infrastructure -> testmaker.Domain
 testmaker.Infrastructure -> testmaker.Application
 testmaker.Domain -> no project references
 ```
 
-This is close to the intended inward dependency model, but not identical.
+This is close to the intended inward dependency model, though the API project still directly references Infrastructure for startup wiring.
 
-### Important current mismatch
+### Current gap versus target architecture
 
-The persistence abstraction, `IApplicationDbContext`, now lives in `testmaker.Application/Common/Interfaces`, which is the right direction for Clean Architecture. The repository still does not fully match the target architecture, though, because the API host is not yet wired to call the Infrastructure registration, and MediatR is still scanning the API assembly rather than the Application assembly.
+The main remaining gap is no longer startup wiring. The repository now correctly wires both Application and Infrastructure from the API host, and MediatR is registered from the Application assembly.
 
-That distinction matters for the README because the repository should not be described as fully following the target architecture yet.
+The remaining gap is breadth rather than wiring:
+
+- only the `Classes` feature has been implemented as a vertical slice
+- most of the domain still does not yet have commands, queries, handlers, validators, or endpoints
+- the API still mixes transport mapping with `Result` interpretation in controllers rather than using a broader shared response-mapping abstraction
+
+That distinction matters because the repository should now be described as an early CQRS foundation with one implemented slice, not as an unwired skeleton.
 
 ## Persistence Architecture
 
@@ -139,9 +171,52 @@ Each entity has a dedicated configuration class under `testmaker.Infrastructure/
 
 ### Current DbContext abstraction
 
-`DependencyInjection.cs` registers `ApplicationDbContext` and maps it to the `IApplicationDbContext` contract defined in Application. That part now aligns with the intended dependency direction, but the API host does not yet call `AddInfrastructure(builder.Configuration)`.
+`DependencyInjection.cs` in Infrastructure registers `ApplicationDbContext` and maps it to the `IApplicationDbContext` contract defined in Application. `Program.cs` in the API host now calls `AddInfrastructure(builder.Configuration)`, so the infrastructure wiring is no longer just defined; it is part of the running host pipeline.
 
-As a result, the repository has the infrastructure wiring defined, but not yet connected into the running host pipeline.
+## Request Flow and Error Handling
+
+The current request flow looks like this:
+
+1. An HTTP request enters `testmaker.Api`.
+2. `ExceptionHandlingMiddleware` wraps the downstream pipeline.
+3. A controller action sends a command or query through MediatR.
+4. `ValidationBehavior<TRequest, TResponse>` runs any registered FluentValidation validators.
+5. If validation fails, a `ValidationException` is thrown and converted by middleware into a `400 Bad Request` response.
+6. If validation passes, the handler runs.
+7. Expected business failures are returned as `Result` / `Result<T>`.
+8. Controllers translate those expected failures into HTTP responses such as `404` or `409`.
+9. Unexpected runtime exceptions bubble to the middleware and are converted into a generic `500 Internal Server Error` response.
+
+This gives the repository a clear split:
+
+- `Result` for expected business outcomes
+- exceptions plus middleware for validation and unexpected failures
+
+## Current Feature Coverage
+
+The first implemented vertical slice is `Classes`.
+
+### Application-side feature implementation
+
+`testmaker.Application/Features/Classes` currently contains:
+
+- queries for listing classes and retrieving a class by number
+- commands for creating, updating, and deleting classes
+- handlers for each command and query
+- validators for create and update operations
+- a small DTO for returning class data
+
+### API-side feature implementation
+
+`testmaker.Api/Features/Classes/ClassesController.cs` currently exposes:
+
+- `GET /api/classes`
+- `GET /api/classes/{classNumber}`
+- `POST /api/classes`
+- `PUT /api/classes/{classNumber}`
+- `DELETE /api/classes/{classNumber}`
+
+This controller is the current reference implementation for how future features should be added.
 
 ## Intended Target Architecture
 
@@ -178,11 +253,11 @@ In that model:
 - validation behaviors run centrally
 - Infrastructure stays behind abstractions defined by Application
 
-This target architecture is not fully implemented yet and should be treated as the next structural milestone, not the current state.
+This target architecture is now partially implemented. The `Classes` slice follows the intended direction, but most of the domain has not yet been migrated into that same structure.
 
 ## Current Implementation Status
 
-The repository is best understood as a foundation in progress.
+The repository is best understood as an early but functioning CQRS foundation.
 
 ### Already implemented
 
@@ -191,20 +266,27 @@ The repository is best understood as a foundation in progress.
 - EF Core `DbContext`
 - entity configurations for the current schema
 - MySQL provider setup in Infrastructure
-- Swagger and basic ASP.NET Core host setup
 - central package management
-
-### Not implemented or not wired yet
-
-- application command/query handlers
-- validators and pipeline behaviors in the Application layer
-- API controllers or feature endpoints
-- Infrastructure registration from the API startup path
+- Application DI registration through `AddApplication()`
 - MediatR scanning of the Application assembly
+- FluentValidation validator registration
+- validation pipeline behavior in the Application layer
+- `IApplicationDbContext` abstraction with `SaveChangesAsync`
+- Infrastructure registration from the API startup path
+- global exception middleware in the API layer
+- first feature slice for `Classes`
+- first API controller and endpoints for `Classes`
+
+### Not implemented or still limited
+
+- additional feature slices beyond `Classes`
+- endpoints for schools, subjects, tests, questions, and related mappings
+- automated tests for handlers, validators, middleware, and controllers
+- a broader shared convention for translating `Result` values to HTTP responses across all controllers
 
 ### Why this matters for contributors
 
-New contributors should treat the current codebase as an infrastructure-first backend skeleton. Persistence and schema mapping are the most concrete parts of the system right now. The request-handling architecture described in the target section is still a work in progress.
+New contributors should treat the current codebase as a working backend foundation rather than only a persistence skeleton. The core request flow is now established, and the `Classes` feature should be used as the reference pattern for future slices.
 
 ## Local Configuration
 
@@ -238,7 +320,17 @@ The API project includes two local launch profiles:
 
 ### Current startup behavior
 
-`Program.cs` currently registers controllers, Swagger, and MediatR, but it does not yet invoke the Infrastructure extension method. If you begin implementing request handlers or database-backed endpoints, wiring `AddInfrastructure(builder.Configuration)` into startup is one of the first follow-up tasks.
+`Program.cs` now registers controllers, Swagger, `AddApplication()`, `AddInfrastructure(builder.Configuration)`, and `ExceptionHandlingMiddleware`. This means the full request path from HTTP endpoint to handler to persistence is wired and runnable.
+
+### Current error-handling convention
+
+The repository currently uses this convention:
+
+- expected business failures use `Result` / `Result<T>`
+- validation failures are thrown from `ValidationBehavior`
+- unexpected runtime failures are handled by API middleware
+
+Contributors should follow that pattern unless the project intentionally decides to standardize on a different model later.
 
 ### Package management
 
@@ -246,12 +338,12 @@ NuGet package versions are managed centrally through `Directory.Packages.props`.
 
 ## Recommended Next Architecture Steps
 
-1. Add `DependencyInjection.cs` to `testmaker.Application` for MediatR, validators, and pipeline behaviors.
-2. Call `AddInfrastructure(builder.Configuration)` and `AddApplication()` from the API startup path.
-3. Change MediatR registration to scan the Application assembly instead of the API assembly.
-4. Start introducing feature-based commands and queries in `testmaker.Application/Features`.
-5. Keep the API layer limited to endpoints, transport concerns, and middleware as features are added.
+1. Add more feature slices such as `Schools`, `Subjects`, and `Tests` using the same Application-plus-API pattern as `Classes`.
+2. Add automated tests for validators, handlers, middleware, and controller behavior.
+3. Introduce a broader shared convention for translating `Result` failures into HTTP responses to reduce repeated controller mapping logic.
+4. Extend the README and contributor guidance as additional feature slices are added so the reference pattern stays current.
+5. Keep the API layer limited to transport concerns, middleware, and endpoint orchestration as more features are added.
 
 ## Summary
 
-This repository is currently a layered .NET backend with a strong EF Core persistence base and a planned move toward CQRS with vertical slices. The README should be read with that split in mind: current implementation first, target architecture second.
+This repository is currently a layered .NET backend with a working CQRS foundation, central validation, infrastructure wiring, exception middleware, and an initial vertical slice for `Classes`. The target architecture is no longer just aspirational, but it is still only partially implemented across the broader testmaker domain.

@@ -28,4 +28,6 @@ public interface IApplicationDbContext
     DbSet<TestSectionMap> TestSectionMaps { get; }
 
     DbSet<TestType> TestTypes { get; }
+
+    Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 }
