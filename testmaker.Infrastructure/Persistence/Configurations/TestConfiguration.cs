@@ -34,7 +34,7 @@ public class TestConfiguration : IEntityTypeConfiguration<Test>
 
         entity.ToTable("test");
 
-        entity.HasIndex(e => e.ClassNumber, "fk_test_class_number");
+        entity.HasIndex(e => e.ClassId, "fk_test_class_id");
 
         entity.HasIndex(e => e.SchoolId, "fk_test_school_id");
 
@@ -45,7 +45,9 @@ public class TestConfiguration : IEntityTypeConfiguration<Test>
         entity.Property(e => e.Id)
             .HasMaxLength(36)
             .HasColumnName("id");
-        entity.Property(e => e.ClassNumber).HasColumnName("class_number");
+        entity.Property(e => e.ClassId)
+            .HasMaxLength(36)
+            .HasColumnName("class_id");
         entity.Property(e => e.CreatedOn)
             .HasDefaultValueSql("CURRENT_TIMESTAMP")
             .HasColumnType("datetime")
@@ -72,8 +74,8 @@ public class TestConfiguration : IEntityTypeConfiguration<Test>
             .HasColumnType("datetime")
             .HasColumnName("updated_on");
 
-        entity.HasOne(d => d.ClassNumberNavigation).WithMany(p => p.Tests)
-            .HasForeignKey(d => d.ClassNumber)
+        entity.HasOne(d => d.Class).WithMany(p => p.Tests)
+            .HasForeignKey(d => d.ClassId)
             .HasConstraintName("test_class_FK");
 
         entity.HasOne(d => d.School).WithMany(p => p.Tests)

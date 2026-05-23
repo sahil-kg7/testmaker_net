@@ -7,7 +7,7 @@ public partial class QuestionDetail
 {
     public Guid Id { get; set; }
 
-    public int QuestionTypeId { get; set; }
+    public Guid QuestionTypeId { get; set; }
 
     public Guid SubjectId { get; set; }
 

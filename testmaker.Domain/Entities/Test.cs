@@ -10,13 +10,13 @@ public partial class Test
 
     public string FileName { get; set; } = null!;
 
-    public Guid? SchoolId { get; set; }
+    public Guid SchoolId { get; set; }
 
-    public int? ClassNumber { get; set; }
+    public Guid ClassId { get; set; }
 
-    public Guid? SubjectId { get; set; }
+    public Guid SubjectId { get; set; }
 
-    public Guid? TestTypeId { get; set; }
+    public Guid TestTypeId { get; set; }
 
     public List<int>? Sections { get; set; }
 
@@ -28,7 +28,7 @@ public partial class Test
 
     public DateTime UpdatedOn { get; set; }
 
-    public virtual Class? ClassNumberNavigation { get; set; }
+    public virtual Class? Class { get; set; }
 
     public virtual ICollection<QuestionSubquestionMap> QuestionSubquestionMaps { get; set; } = new List<QuestionSubquestionMap>();
 

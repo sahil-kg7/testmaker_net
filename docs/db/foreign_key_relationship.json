@@ -1,0 +1,87 @@
+{
+"-- Foreign key relationships (the mapping layer)\nSELECT\n  kcu.TABLE_NAME          AS from_table,\n  kcu.COLUMN_NAME         AS from_column,\n  kcu.REFERENCED_TABLE_NAME  AS to_table,\n  kcu.REFERENCED_COLUMN_NAME AS to_column,\n  kcu.CONSTRAINT_NAME\nFROM information_schema.KEY_COLUMN_USAGE kcu\nJOIN information_schema.REFERENTIAL_CONSTRAINTS rc\n  ON kcu.CONSTRAINT_NAME = rc.CONSTRAINT_NAME\n  AND kcu.TABLE_SCHEMA = rc.CONSTRAINT_SCHEMA\nWHERE kcu.TABLE_SCHEMA = 'testmaker_v2'\n  AND kcu.REFERENCED_TABLE_NAME IS NOT NULL": [
+	{
+		"from_table" : "question_details",
+		"from_column" : "difficulty",
+		"to_table" : "question_difficulty",
+		"to_column" : "id",
+		"CONSTRAINT_NAME" : "question_details_question_difficulty_FK"
+	},
+	{
+		"from_table" : "question_details",
+		"from_column" : "subject_id",
+		"to_table" : "subject",
+		"to_column" : "id",
+		"CONSTRAINT_NAME" : "question_details_subject_FK"
+	},
+	{
+		"from_table" : "question_images",
+		"from_column" : "question_id",
+		"to_table" : "question_details",
+		"to_column" : "id",
+		"CONSTRAINT_NAME" : "question_images_question_details_FK"
+	},
+	{
+		"from_table" : "question_subquestion_map",
+		"from_column" : "question_id",
+		"to_table" : "question_details",
+		"to_column" : "id",
+		"CONSTRAINT_NAME" : "question_subquestion_map_question_details_FK"
+	},
+	{
+		"from_table" : "question_subquestion_map",
+		"from_column" : "subquestion_id",
+		"to_table" : "question_details",
+		"to_column" : "id",
+		"CONSTRAINT_NAME" : "question_subquestion_map_question_details_FK_1"
+	},
+	{
+		"from_table" : "question_subquestion_map",
+		"from_column" : "test_id",
+		"to_table" : "test",
+		"to_column" : "id",
+		"CONSTRAINT_NAME" : "question_subquestion_map_test_FK"
+	},
+	{
+		"from_table" : "test",
+		"from_column" : "class_id",
+		"to_table" : "class",
+		"to_column" : "id",
+		"CONSTRAINT_NAME" : "test_class_FK"
+	},
+	{
+		"from_table" : "test",
+		"from_column" : "school_id",
+		"to_table" : "school",
+		"to_column" : "id",
+		"CONSTRAINT_NAME" : "test_school_FK"
+	},
+	{
+		"from_table" : "test",
+		"from_column" : "subject_id",
+		"to_table" : "subject",
+		"to_column" : "id",
+		"CONSTRAINT_NAME" : "test_subject_FK"
+	},
+	{
+		"from_table" : "test",
+		"from_column" : "test_type_id",
+		"to_table" : "test_type",
+		"to_column" : "id",
+		"CONSTRAINT_NAME" : "test_test_type_FK"
+	},
+	{
+		"from_table" : "test_question_map",
+		"from_column" : "question_id",
+		"to_table" : "question_details",
+		"to_column" : "id",
+		"CONSTRAINT_NAME" : "test_question_map_question_details_FK"
+	},
+	{
+		"from_table" : "test_question_map",
+		"from_column" : "test_id",
+		"to_table" : "test",
+		"to_column" : "id",
+		"CONSTRAINT_NAME" : "test_question_map_test_FK"
+	}
+]}

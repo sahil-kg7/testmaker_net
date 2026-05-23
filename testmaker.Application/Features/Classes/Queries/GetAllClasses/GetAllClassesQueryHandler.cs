@@ -17,8 +17,8 @@ public class GetAllClassesQueryHandler : IRequestHandler<GetAllClassesQuery, Res
     public async Task<Result<List<ClassDto>>> Handle(GetAllClassesQuery request, CancellationToken cancellationToken)
     {
         var classes = await _context.Classes
-            .OrderBy(c => c.ClassNumber)
-            .Select(c => new ClassDto(c.ClassNumber, c.ClassRoman))
+            .OrderBy(c => c.ClassName)
+            .Select(c => new ClassDto(c.Id, c.ClassName))
             .ToListAsync(cancellationToken);
 
         return Result<List<ClassDto>>.Success(classes);

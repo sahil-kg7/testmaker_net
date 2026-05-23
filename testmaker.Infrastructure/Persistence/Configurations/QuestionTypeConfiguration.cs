@@ -14,6 +14,7 @@ public class QuestionTypeConfiguration : IEntityTypeConfiguration<QuestionType>
 
         entity.Property(e => e.Id)
             .ValueGeneratedNever()
+            .HasMaxLength(36)
             .HasColumnName("id");
         entity.Property(e => e.CreatedOn)
             .HasDefaultValueSql("CURRENT_TIMESTAMP")

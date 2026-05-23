@@ -5,9 +5,9 @@ namespace testmaker.Domain.Entities;
 
 public partial class Class
 {
-    public int ClassNumber { get; set; }
+    public Guid Id { get; set; }
 
-    public string ClassRoman { get; set; } = null!;
+    public string ClassName { get; set; } = null!;
 
     public DateTime CreatedOn { get; set; }
 

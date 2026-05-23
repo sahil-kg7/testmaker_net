@@ -6,10 +6,7 @@ public class CreateClassCommandValidator : AbstractValidator<CreateClassCommand>
 {
     public CreateClassCommandValidator()
     {
-        RuleFor(x => x.ClassNumber)
-            .GreaterThan(0).WithMessage("ClassNumber must be greater than 0.");
-
-        RuleFor(x => x.ClassRoman)
-            .NotEmpty().WithMessage("ClassRoman is required.");
+        RuleFor(x => x.ClassName)
+            .NotEmpty().WithMessage("ClassName is required.");
     }
 }

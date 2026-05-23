@@ -71,7 +71,9 @@ public class QuestionDetailConfiguration : IEntityTypeConfiguration<QuestionDeta
             .HasConversion(jsonListConverter, jsonListComparer)
             .HasColumnType("json")
             .HasColumnName("mcq");
-        entity.Property(e => e.QuestionTypeId).HasColumnName("question_type_id");
+        entity.Property(e => e.QuestionTypeId)
+            .HasMaxLength(36)
+            .HasColumnName("question_type_id");
         entity.Property(e => e.Reason).HasColumnName("reason");
         entity.Property(e => e.SubjectId)
             .HasMaxLength(36)

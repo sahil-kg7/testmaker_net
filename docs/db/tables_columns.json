@@ -1,0 +1,555 @@
+{
+"-- All tables + columns with types, nullability, keys\nSELECT\n  t.TABLE_NAME,\n  c.COLUMN_NAME,\n  c.COLUMN_TYPE,\n  c.IS_NULLABLE,\n  c.COLUMN_KEY,       -- PRI, MUL, UNI\n  c.COLUMN_COMMENT\nFROM information_schema.TABLES t\nJOIN information_schema.COLUMNS c\n  ON t.TABLE_NAME = c.TABLE_NAME\n  AND t.TABLE_SCHEMA = c.TABLE_SCHEMA\nWHERE t.TABLE_SCHEMA = 'testmaker_v2'\nORDER BY t.TABLE_NAME, c.ORDINAL_POSITION": [
+	{
+		"TABLE_NAME" : "class",
+		"COLUMN_NAME" : "id",
+		"COLUMN_TYPE" : "varchar(36)",
+		"IS_NULLABLE" : "NO",
+		"COLUMN_KEY" : "PRI",
+		"COLUMN_COMMENT" : ""
+	},
+	{
+		"TABLE_NAME" : "class",
+		"COLUMN_NAME" : "class_name",
+		"COLUMN_TYPE" : "varchar(100)",
+		"IS_NULLABLE" : "NO",
+		"COLUMN_KEY" : "",
+		"COLUMN_COMMENT" : ""
+	},
+	{
+		"TABLE_NAME" : "class",
+		"COLUMN_NAME" : "created_on",
+		"COLUMN_TYPE" : "datetime",
+		"IS_NULLABLE" : "NO",
+		"COLUMN_KEY" : "",
+		"COLUMN_COMMENT" : ""
+	},
+	{
+		"TABLE_NAME" : "class",
+		"COLUMN_NAME" : "updated_on",
+		"COLUMN_TYPE" : "datetime",
+		"IS_NULLABLE" : "NO",
+		"COLUMN_KEY" : "",
+		"COLUMN_COMMENT" : ""
+	},
+	{
+		"TABLE_NAME" : "question_details",
+		"COLUMN_NAME" : "id",
+		"COLUMN_TYPE" : "varchar(36)",
+		"IS_NULLABLE" : "NO",
+		"COLUMN_KEY" : "PRI",
+		"COLUMN_COMMENT" : ""
+	},
+	{
+		"TABLE_NAME" : "question_details",
+		"COLUMN_NAME" : "question_type_id",
+		"COLUMN_TYPE" : "varchar(36)",
+		"IS_NULLABLE" : "NO",
+		"COLUMN_KEY" : "MUL",
+		"COLUMN_COMMENT" : ""
+	},
+	{
+		"TABLE_NAME" : "question_details",
+		"COLUMN_NAME" : "subject_id",
+		"COLUMN_TYPE" : "varchar(36)",
+		"IS_NULLABLE" : "NO",
+		"COLUMN_KEY" : "MUL",
+		"COLUMN_COMMENT" : ""
+	},
+	{
+		"TABLE_NAME" : "question_details",
+		"COLUMN_NAME" : "difficulty",
+		"COLUMN_TYPE" : "varchar(36)",
+		"IS_NULLABLE" : "NO",
+		"COLUMN_KEY" : "MUL",
+		"COLUMN_COMMENT" : ""
+	},
+	{
+		"TABLE_NAME" : "question_details",
+		"COLUMN_NAME" : "marks",
+		"COLUMN_TYPE" : "int",
+		"IS_NULLABLE" : "NO",
+		"COLUMN_KEY" : "",
+		"COLUMN_COMMENT" : ""
+	},
+	{
+		"TABLE_NAME" : "question_details",
+		"COLUMN_NAME" : "content",
+		"COLUMN_TYPE" : "longtext",
+		"IS_NULLABLE" : "YES",
+		"COLUMN_KEY" : "",
+		"COLUMN_COMMENT" : ""
+	},
+	{
+		"TABLE_NAME" : "question_details",
+		"COLUMN_NAME" : "created_on",
+		"COLUMN_TYPE" : "datetime",
+		"IS_NULLABLE" : "NO",
+		"COLUMN_KEY" : "",
+		"COLUMN_COMMENT" : ""
+	},
+	{
+		"TABLE_NAME" : "question_details",
+		"COLUMN_NAME" : "updated_on",
+		"COLUMN_TYPE" : "datetime",
+		"IS_NULLABLE" : "NO",
+		"COLUMN_KEY" : "",
+		"COLUMN_COMMENT" : ""
+	},
+	{
+		"TABLE_NAME" : "question_details",
+		"COLUMN_NAME" : "mcq",
+		"COLUMN_TYPE" : "json",
+		"IS_NULLABLE" : "YES",
+		"COLUMN_KEY" : "",
+		"COLUMN_COMMENT" : ""
+	},
+	{
+		"TABLE_NAME" : "question_details",
+		"COLUMN_NAME" : "match_a",
+		"COLUMN_TYPE" : "json",
+		"IS_NULLABLE" : "YES",
+		"COLUMN_KEY" : "",
+		"COLUMN_COMMENT" : ""
+	},
+	{
+		"TABLE_NAME" : "question_details",
+		"COLUMN_NAME" : "match_b",
+		"COLUMN_TYPE" : "json",
+		"IS_NULLABLE" : "YES",
+		"COLUMN_KEY" : "",
+		"COLUMN_COMMENT" : ""
+	},
+	{
+		"TABLE_NAME" : "question_details",
+		"COLUMN_NAME" : "fib_words",
+		"COLUMN_TYPE" : "json",
+		"IS_NULLABLE" : "YES",
+		"COLUMN_KEY" : "",
+		"COLUMN_COMMENT" : ""
+	},
+	{
+		"TABLE_NAME" : "question_details",
+		"COLUMN_NAME" : "reason",
+		"COLUMN_TYPE" : "longtext",
+		"IS_NULLABLE" : "YES",
+		"COLUMN_KEY" : "",
+		"COLUMN_COMMENT" : ""
+	},
+	{
+		"TABLE_NAME" : "question_details",
+		"COLUMN_NAME" : "assertion",
+		"COLUMN_TYPE" : "longtext",
+		"IS_NULLABLE" : "YES",
+		"COLUMN_KEY" : "",
+		"COLUMN_COMMENT" : ""
+	},
+	{
+		"TABLE_NAME" : "question_difficulty",
+		"COLUMN_NAME" : "id",
+		"COLUMN_TYPE" : "varchar(36)",
+		"IS_NULLABLE" : "NO",
+		"COLUMN_KEY" : "PRI",
+		"COLUMN_COMMENT" : ""
+	},
+	{
+		"TABLE_NAME" : "question_difficulty",
+		"COLUMN_NAME" : "level",
+		"COLUMN_TYPE" : "varchar(50)",
+		"IS_NULLABLE" : "NO",
+		"COLUMN_KEY" : "",
+		"COLUMN_COMMENT" : ""
+	},
+	{
+		"TABLE_NAME" : "question_difficulty",
+		"COLUMN_NAME" : "created_on",
+		"COLUMN_TYPE" : "datetime",
+		"IS_NULLABLE" : "NO",
+		"COLUMN_KEY" : "",
+		"COLUMN_COMMENT" : ""
+	},
+	{
+		"TABLE_NAME" : "question_difficulty",
+		"COLUMN_NAME" : "updated_on",
+		"COLUMN_TYPE" : "datetime",
+		"IS_NULLABLE" : "NO",
+		"COLUMN_KEY" : "",
+		"COLUMN_COMMENT" : ""
+	},
+	{
+		"TABLE_NAME" : "question_images",
+		"COLUMN_NAME" : "id",
+		"COLUMN_TYPE" : "varchar(36)",
+		"IS_NULLABLE" : "NO",
+		"COLUMN_KEY" : "PRI",
+		"COLUMN_COMMENT" : ""
+	},
+	{
+		"TABLE_NAME" : "question_images",
+		"COLUMN_NAME" : "question_id",
+		"COLUMN_TYPE" : "varchar(36)",
+		"IS_NULLABLE" : "NO",
+		"COLUMN_KEY" : "MUL",
+		"COLUMN_COMMENT" : ""
+	},
+	{
+		"TABLE_NAME" : "question_images",
+		"COLUMN_NAME" : "image_position",
+		"COLUMN_TYPE" : "int",
+		"IS_NULLABLE" : "NO",
+		"COLUMN_KEY" : "",
+		"COLUMN_COMMENT" : ""
+	},
+	{
+		"TABLE_NAME" : "question_images",
+		"COLUMN_NAME" : "image_name",
+		"COLUMN_TYPE" : "varchar(50)",
+		"IS_NULLABLE" : "NO",
+		"COLUMN_KEY" : "",
+		"COLUMN_COMMENT" : ""
+	},
+	{
+		"TABLE_NAME" : "question_images",
+		"COLUMN_NAME" : "created_on",
+		"COLUMN_TYPE" : "datetime",
+		"IS_NULLABLE" : "NO",
+		"COLUMN_KEY" : "",
+		"COLUMN_COMMENT" : ""
+	},
+	{
+		"TABLE_NAME" : "question_images",
+		"COLUMN_NAME" : "updated_on",
+		"COLUMN_TYPE" : "datetime",
+		"IS_NULLABLE" : "NO",
+		"COLUMN_KEY" : "",
+		"COLUMN_COMMENT" : ""
+	},
+	{
+		"TABLE_NAME" : "question_subquestion_map",
+		"COLUMN_NAME" : "id",
+		"COLUMN_TYPE" : "varchar(36)",
+		"IS_NULLABLE" : "NO",
+		"COLUMN_KEY" : "PRI",
+		"COLUMN_COMMENT" : ""
+	},
+	{
+		"TABLE_NAME" : "question_subquestion_map",
+		"COLUMN_NAME" : "test_id",
+		"COLUMN_TYPE" : "varchar(36)",
+		"IS_NULLABLE" : "NO",
+		"COLUMN_KEY" : "MUL",
+		"COLUMN_COMMENT" : ""
+	},
+	{
+		"TABLE_NAME" : "question_subquestion_map",
+		"COLUMN_NAME" : "question_id",
+		"COLUMN_TYPE" : "varchar(36)",
+		"IS_NULLABLE" : "NO",
+		"COLUMN_KEY" : "MUL",
+		"COLUMN_COMMENT" : ""
+	},
+	{
+		"TABLE_NAME" : "question_subquestion_map",
+		"COLUMN_NAME" : "subquestion_id",
+		"COLUMN_TYPE" : "varchar(36)",
+		"IS_NULLABLE" : "NO",
+		"COLUMN_KEY" : "MUL",
+		"COLUMN_COMMENT" : ""
+	},
+	{
+		"TABLE_NAME" : "question_subquestion_map",
+		"COLUMN_NAME" : "subquestion_number",
+		"COLUMN_TYPE" : "int",
+		"IS_NULLABLE" : "NO",
+		"COLUMN_KEY" : "",
+		"COLUMN_COMMENT" : ""
+	},
+	{
+		"TABLE_NAME" : "question_subquestion_map",
+		"COLUMN_NAME" : "created_on",
+		"COLUMN_TYPE" : "datetime",
+		"IS_NULLABLE" : "NO",
+		"COLUMN_KEY" : "",
+		"COLUMN_COMMENT" : ""
+	},
+	{
+		"TABLE_NAME" : "question_subquestion_map",
+		"COLUMN_NAME" : "updated_on",
+		"COLUMN_TYPE" : "datetime",
+		"IS_NULLABLE" : "NO",
+		"COLUMN_KEY" : "",
+		"COLUMN_COMMENT" : ""
+	},
+	{
+		"TABLE_NAME" : "question_type",
+		"COLUMN_NAME" : "id",
+		"COLUMN_TYPE" : "varchar(36)",
+		"IS_NULLABLE" : "NO",
+		"COLUMN_KEY" : "PRI",
+		"COLUMN_COMMENT" : ""
+	},
+	{
+		"TABLE_NAME" : "question_type",
+		"COLUMN_NAME" : "type",
+		"COLUMN_TYPE" : "varchar(50)",
+		"IS_NULLABLE" : "NO",
+		"COLUMN_KEY" : "",
+		"COLUMN_COMMENT" : ""
+	},
+	{
+		"TABLE_NAME" : "question_type",
+		"COLUMN_NAME" : "created_on",
+		"COLUMN_TYPE" : "datetime",
+		"IS_NULLABLE" : "NO",
+		"COLUMN_KEY" : "",
+		"COLUMN_COMMENT" : ""
+	},
+	{
+		"TABLE_NAME" : "question_type",
+		"COLUMN_NAME" : "updated_on",
+		"COLUMN_TYPE" : "datetime",
+		"IS_NULLABLE" : "NO",
+		"COLUMN_KEY" : "",
+		"COLUMN_COMMENT" : ""
+	},
+	{
+		"TABLE_NAME" : "school",
+		"COLUMN_NAME" : "id",
+		"COLUMN_TYPE" : "varchar(36)",
+		"IS_NULLABLE" : "NO",
+		"COLUMN_KEY" : "PRI",
+		"COLUMN_COMMENT" : ""
+	},
+	{
+		"TABLE_NAME" : "school",
+		"COLUMN_NAME" : "name",
+		"COLUMN_TYPE" : "varchar(50)",
+		"IS_NULLABLE" : "NO",
+		"COLUMN_KEY" : "",
+		"COLUMN_COMMENT" : ""
+	},
+	{
+		"TABLE_NAME" : "school",
+		"COLUMN_NAME" : "logo_filename",
+		"COLUMN_TYPE" : "text",
+		"IS_NULLABLE" : "YES",
+		"COLUMN_KEY" : "",
+		"COLUMN_COMMENT" : ""
+	},
+	{
+		"TABLE_NAME" : "school",
+		"COLUMN_NAME" : "created_on",
+		"COLUMN_TYPE" : "datetime",
+		"IS_NULLABLE" : "NO",
+		"COLUMN_KEY" : "",
+		"COLUMN_COMMENT" : ""
+	},
+	{
+		"TABLE_NAME" : "school",
+		"COLUMN_NAME" : "updated_on",
+		"COLUMN_TYPE" : "datetime",
+		"IS_NULLABLE" : "NO",
+		"COLUMN_KEY" : "",
+		"COLUMN_COMMENT" : ""
+	},
+	{
+		"TABLE_NAME" : "subject",
+		"COLUMN_NAME" : "id",
+		"COLUMN_TYPE" : "varchar(36)",
+		"IS_NULLABLE" : "NO",
+		"COLUMN_KEY" : "PRI",
+		"COLUMN_COMMENT" : ""
+	},
+	{
+		"TABLE_NAME" : "subject",
+		"COLUMN_NAME" : "name",
+		"COLUMN_TYPE" : "varchar(50)",
+		"IS_NULLABLE" : "NO",
+		"COLUMN_KEY" : "",
+		"COLUMN_COMMENT" : ""
+	},
+	{
+		"TABLE_NAME" : "subject",
+		"COLUMN_NAME" : "created_on",
+		"COLUMN_TYPE" : "datetime",
+		"IS_NULLABLE" : "NO",
+		"COLUMN_KEY" : "",
+		"COLUMN_COMMENT" : ""
+	},
+	{
+		"TABLE_NAME" : "subject",
+		"COLUMN_NAME" : "updated_on",
+		"COLUMN_TYPE" : "datetime",
+		"IS_NULLABLE" : "NO",
+		"COLUMN_KEY" : "",
+		"COLUMN_COMMENT" : ""
+	},
+	{
+		"TABLE_NAME" : "test",
+		"COLUMN_NAME" : "id",
+		"COLUMN_TYPE" : "varchar(36)",
+		"IS_NULLABLE" : "NO",
+		"COLUMN_KEY" : "PRI",
+		"COLUMN_COMMENT" : ""
+	},
+	{
+		"TABLE_NAME" : "test",
+		"COLUMN_NAME" : "file_name",
+		"COLUMN_TYPE" : "longtext",
+		"IS_NULLABLE" : "NO",
+		"COLUMN_KEY" : "",
+		"COLUMN_COMMENT" : ""
+	},
+	{
+		"TABLE_NAME" : "test",
+		"COLUMN_NAME" : "school_id",
+		"COLUMN_TYPE" : "varchar(36)",
+		"IS_NULLABLE" : "NO",
+		"COLUMN_KEY" : "MUL",
+		"COLUMN_COMMENT" : ""
+	},
+	{
+		"TABLE_NAME" : "test",
+		"COLUMN_NAME" : "class_id",
+		"COLUMN_TYPE" : "varchar(36)",
+		"IS_NULLABLE" : "NO",
+		"COLUMN_KEY" : "MUL",
+		"COLUMN_COMMENT" : ""
+	},
+	{
+		"TABLE_NAME" : "test",
+		"COLUMN_NAME" : "subject_id",
+		"COLUMN_TYPE" : "varchar(36)",
+		"IS_NULLABLE" : "NO",
+		"COLUMN_KEY" : "MUL",
+		"COLUMN_COMMENT" : ""
+	},
+	{
+		"TABLE_NAME" : "test",
+		"COLUMN_NAME" : "test_type_id",
+		"COLUMN_TYPE" : "varchar(36)",
+		"IS_NULLABLE" : "NO",
+		"COLUMN_KEY" : "MUL",
+		"COLUMN_COMMENT" : ""
+	},
+	{
+		"TABLE_NAME" : "test",
+		"COLUMN_NAME" : "sections",
+		"COLUMN_TYPE" : "json",
+		"IS_NULLABLE" : "YES",
+		"COLUMN_KEY" : "",
+		"COLUMN_COMMENT" : "a list of question numbers, before each number the section starts"
+	},
+	{
+		"TABLE_NAME" : "test",
+		"COLUMN_NAME" : "time_duration",
+		"COLUMN_TYPE" : "int",
+		"IS_NULLABLE" : "NO",
+		"COLUMN_KEY" : "",
+		"COLUMN_COMMENT" : ""
+	},
+	{
+		"TABLE_NAME" : "test",
+		"COLUMN_NAME" : "maximum_marks",
+		"COLUMN_TYPE" : "int",
+		"IS_NULLABLE" : "NO",
+		"COLUMN_KEY" : "",
+		"COLUMN_COMMENT" : ""
+	},
+	{
+		"TABLE_NAME" : "test",
+		"COLUMN_NAME" : "created_on",
+		"COLUMN_TYPE" : "datetime",
+		"IS_NULLABLE" : "NO",
+		"COLUMN_KEY" : "",
+		"COLUMN_COMMENT" : ""
+	},
+	{
+		"TABLE_NAME" : "test",
+		"COLUMN_NAME" : "updated_on",
+		"COLUMN_TYPE" : "datetime",
+		"IS_NULLABLE" : "NO",
+		"COLUMN_KEY" : "",
+		"COLUMN_COMMENT" : ""
+	},
+	{
+		"TABLE_NAME" : "test_question_map",
+		"COLUMN_NAME" : "id",
+		"COLUMN_TYPE" : "varchar(36)",
+		"IS_NULLABLE" : "NO",
+		"COLUMN_KEY" : "PRI",
+		"COLUMN_COMMENT" : ""
+	},
+	{
+		"TABLE_NAME" : "test_question_map",
+		"COLUMN_NAME" : "test_id",
+		"COLUMN_TYPE" : "varchar(36)",
+		"IS_NULLABLE" : "NO",
+		"COLUMN_KEY" : "MUL",
+		"COLUMN_COMMENT" : ""
+	},
+	{
+		"TABLE_NAME" : "test_question_map",
+		"COLUMN_NAME" : "question_id",
+		"COLUMN_TYPE" : "varchar(36)",
+		"IS_NULLABLE" : "NO",
+		"COLUMN_KEY" : "MUL",
+		"COLUMN_COMMENT" : ""
+	},
+	{
+		"TABLE_NAME" : "test_question_map",
+		"COLUMN_NAME" : "question_position",
+		"COLUMN_TYPE" : "int",
+		"IS_NULLABLE" : "NO",
+		"COLUMN_KEY" : "",
+		"COLUMN_COMMENT" : ""
+	},
+	{
+		"TABLE_NAME" : "test_question_map",
+		"COLUMN_NAME" : "created_on",
+		"COLUMN_TYPE" : "datetime",
+		"IS_NULLABLE" : "NO",
+		"COLUMN_KEY" : "",
+		"COLUMN_COMMENT" : ""
+	},
+	{
+		"TABLE_NAME" : "test_question_map",
+		"COLUMN_NAME" : "updated_on",
+		"COLUMN_TYPE" : "datetime",
+		"IS_NULLABLE" : "NO",
+		"COLUMN_KEY" : "",
+		"COLUMN_COMMENT" : ""
+	},
+	{
+		"TABLE_NAME" : "test_type",
+		"COLUMN_NAME" : "id",
+		"COLUMN_TYPE" : "varchar(36)",
+		"IS_NULLABLE" : "NO",
+		"COLUMN_KEY" : "PRI",
+		"COLUMN_COMMENT" : ""
+	},
+	{
+		"TABLE_NAME" : "test_type",
+		"COLUMN_NAME" : "type",
+		"COLUMN_TYPE" : "varchar(20)",
+		"IS_NULLABLE" : "NO",
+		"COLUMN_KEY" : "",
+		"COLUMN_COMMENT" : ""
+	},
+	{
+		"TABLE_NAME" : "test_type",
+		"COLUMN_NAME" : "created_on",
+		"COLUMN_TYPE" : "datetime",
+		"IS_NULLABLE" : "NO",
+		"COLUMN_KEY" : "",
+		"COLUMN_COMMENT" : ""
+	},
+	{
+		"TABLE_NAME" : "test_type",
+		"COLUMN_NAME" : "updated_on",
+		"COLUMN_TYPE" : "datetime",
+		"IS_NULLABLE" : "NO",
+		"COLUMN_KEY" : "",
+		"COLUMN_COMMENT" : ""
+	}
+]}

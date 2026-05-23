@@ -6,7 +6,7 @@ using testmaker.Domain.Entities;
 
 namespace testmaker.Application.Features.Classes.Commands.CreateClass;
 
-public class CreateClassCommandHandler : IRequestHandler<CreateClassCommand, Result<int>>
+public class CreateClassCommandHandler : IRequestHandler<CreateClassCommand, Result<Guid>>
 {
     private readonly IApplicationDbContext _context;
 
@@ -15,23 +15,17 @@ public class CreateClassCommandHandler : IRequestHandler<CreateClassCommand, Res
         _context = context;
     }
 
-    public async Task<Result<int>> Handle(CreateClassCommand request, CancellationToken cancellationToken)
+    public async Task<Result<Guid>> Handle(CreateClassCommand request, CancellationToken cancellationToken)
     {
-        var exists = await _context.Classes
-            .AnyAsync(c => c.ClassNumber == request.ClassNumber, cancellationToken);
-
-        if (exists)
-            return Result<int>.Failure($"Class with number {request.ClassNumber} already exists.");
-
         var entity = new Class
         {
-            ClassNumber = request.ClassNumber,
-            ClassRoman = request.ClassRoman
+            Id = Guid.NewGuid(),
+            ClassName = request.ClassName
         };
 
         _context.Classes.Add(entity);
         await _context.SaveChangesAsync(cancellationToken);
 
-        return Result<int>.Success(entity.ClassNumber);
+        return Result<Guid>.Success(entity.Id);
     }
 }
