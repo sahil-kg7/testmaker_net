@@ -1,5 +1,9 @@
+using System.Linq;
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using testmaker.Domain.Entities;
 
 namespace testmaker.Infrastructure.Persistence.Configurations;
@@ -8,6 +12,26 @@ public class QuestionDetailConfiguration : IEntityTypeConfiguration<QuestionDeta
 {
     public void Configure(EntityTypeBuilder<QuestionDetail> entity)
     {
+        var jsonListConverter = new ValueConverter<List<string>?, string?>(
+            value => value == null ? null : JsonSerializer.Serialize(value, (JsonSerializerOptions?)null),
+            value => string.IsNullOrWhiteSpace(value)
+                ? null
+                : JsonSerializer.Deserialize<List<string>>(value, (JsonSerializerOptions?)null));
+
+        var jsonListComparer = new ValueComparer<List<string>?>(
+            (left, right) =>
+                left == right ||
+                (left != null && right != null && left.SequenceEqual(right)),
+            value =>
+                value == null
+                    ? 0
+                    : value.Aggregate(
+                        0,
+                        (current, item) => HashCode.Combine(
+                            current,
+                            item == null ? 0 : StringComparer.Ordinal.GetHashCode(item))),
+            value => value == null ? null : value.ToList());
+
         entity.HasKey(e => e.Id).HasName("PRIMARY");
 
         entity.ToTable("question_details");
@@ -31,16 +55,20 @@ public class QuestionDetailConfiguration : IEntityTypeConfiguration<QuestionDeta
             .HasMaxLength(36)
             .HasColumnName("difficulty");
         entity.Property(e => e.FibWords)
+            .HasConversion(jsonListConverter, jsonListComparer)
             .HasColumnType("json")
             .HasColumnName("fib_words");
         entity.Property(e => e.Marks).HasColumnName("marks");
         entity.Property(e => e.MatchA)
+            .HasConversion(jsonListConverter, jsonListComparer)
             .HasColumnType("json")
             .HasColumnName("match_a");
         entity.Property(e => e.MatchB)
+            .HasConversion(jsonListConverter, jsonListComparer)
             .HasColumnType("json")
             .HasColumnName("match_b");
         entity.Property(e => e.Mcq)
+            .HasConversion(jsonListConverter, jsonListComparer)
             .HasColumnType("json")
             .HasColumnName("mcq");
         entity.Property(e => e.QuestionTypeId).HasColumnName("question_type_id");

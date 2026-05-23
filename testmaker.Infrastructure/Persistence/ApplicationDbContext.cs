@@ -35,7 +35,6 @@ public partial class ApplicationDbContext : DbContext, IApplicationDbContext
 
     public DbSet<TestQuestionMap> TestQuestionMaps => Set<TestQuestionMap>();
 
-    public DbSet<TestSectionMap> TestSectionMaps => Set<TestSectionMap>();
     public DbSet<TestType> TestTypes => Set<TestType>();
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)

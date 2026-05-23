@@ -25,8 +25,6 @@ public interface IApplicationDbContext
 
     DbSet<TestQuestionMap> TestQuestionMaps { get; }
 
-    DbSet<TestSectionMap> TestSectionMaps { get; }
-
     DbSet<TestType> TestTypes { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);

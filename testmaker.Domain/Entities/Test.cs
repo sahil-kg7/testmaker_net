@@ -18,7 +18,7 @@ public partial class Test
 
     public Guid? TestTypeId { get; set; }
 
-    public int? SectionCount { get; set; }
+    public List<int>? Sections { get; set; }
 
     public int TimeDuration { get; set; }
 

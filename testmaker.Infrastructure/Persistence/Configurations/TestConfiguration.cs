@@ -1,5 +1,9 @@
+using System.Linq;
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using testmaker.Domain.Entities;
 
 namespace testmaker.Infrastructure.Persistence.Configurations;
@@ -8,6 +12,24 @@ public class TestConfiguration : IEntityTypeConfiguration<Test>
 {
     public void Configure(EntityTypeBuilder<Test> entity)
     {
+        var jsonListConverter = new ValueConverter<List<int>?, string?>(
+            value => value == null ? null : JsonSerializer.Serialize(value, (JsonSerializerOptions?)null),
+            value => string.IsNullOrWhiteSpace(value)
+                ? null
+                : JsonSerializer.Deserialize<List<int>>(value, (JsonSerializerOptions?)null));
+
+        var jsonListComparer = new ValueComparer<List<int>?>(
+            (left, right) =>
+                left == right ||
+                (left != null && right != null && left.SequenceEqual(right)),
+            value =>
+                value == null
+                    ? 0
+                    : value.Aggregate(
+                        0,
+                        (current, item) => HashCode.Combine(current, item.GetHashCode())),
+            value => value == null ? null : value.ToList());
+
         entity.HasKey(e => e.Id).HasName("PRIMARY");
 
         entity.ToTable("test");
@@ -33,7 +55,10 @@ public class TestConfiguration : IEntityTypeConfiguration<Test>
         entity.Property(e => e.SchoolId)
             .HasMaxLength(36)
             .HasColumnName("school_id");
-        entity.Property(e => e.SectionCount).HasColumnName("section_count");
+        entity.Property(e => e.Sections)
+            .HasConversion(jsonListConverter, jsonListComparer)
+            .HasColumnType("json")
+            .HasColumnName("sections");
         entity.Property(e => e.SubjectId)
             .HasMaxLength(36)
             .HasColumnName("subject_id");

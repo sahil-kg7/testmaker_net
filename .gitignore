@@ -2,6 +2,7 @@ bin/
 obj/
 .vs/
 .idea/
+.omo/
 *.user
 *.suo
 *.userosscache

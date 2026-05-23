@@ -21,13 +21,13 @@ public partial class QuestionDetail
 
     public DateTime UpdatedOn { get; set; }
 
-    public string? Mcq { get; set; }
+    public List<string>? Mcq { get; set; }
 
-    public string? MatchA { get; set; }
+    public List<string>? MatchA { get; set; }
 
-    public string? MatchB { get; set; }
+    public List<string>? MatchB { get; set; }
 
-    public string? FibWords { get; set; }
+    public List<string>? FibWords { get; set; }
 
     public string? Reason { get; set; }
 
