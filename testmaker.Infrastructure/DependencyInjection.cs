@@ -15,7 +15,8 @@ public static class DependencyInjection
             options.UseMySql(
                 connectionString,
                 ServerVersion.AutoDetect(connectionString),
-                b => b.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName)));
+                b => b.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName))
+            .AddInterceptors(new AuditSaveChangesInterceptor()));
 
         services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
 

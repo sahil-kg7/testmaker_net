@@ -17,10 +17,22 @@ public class CreateClassCommandHandler : IRequestHandler<CreateClassCommand, Res
 
     public async Task<Result<Guid>> Handle(CreateClassCommand request, CancellationToken cancellationToken)
     {
+        var normalizedName = request.ClassName.ToLower();
+
+        var exists = await _context.Classes
+            .AnyAsync(c => c.ClassName.ToLower() == normalizedName, cancellationToken);
+
+        if (exists)
+            return Result<Guid>.Failure($"Class with name '{request.ClassName}' already exists.", ErrorType.Conflict);
+
+        var timestamp = DateTime.UtcNow;
+
         var entity = new Class
         {
             Id = Guid.NewGuid(),
-            ClassName = request.ClassName
+            ClassName = request.ClassName,
+            CreatedOn = timestamp,
+            UpdatedOn = timestamp
         };
 
         _context.Classes.Add(entity);

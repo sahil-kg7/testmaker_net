@@ -26,8 +26,10 @@ The long-term direction remains a cleaner CQRS-based structure where the API pro
 testmaker_net/
 ├── testmaker.Api/
 │   ├── Features/
-│   │   └── Classes/
-│   │       └── ClassesController.cs
+│   │   ├── Classes/
+│   │   │   └── ClassesController.cs
+│   │   └── Subjects/
+│   │       └── SubjectsController.cs
 │   ├── Middleware/
 │   │   └── ExceptionHandlingMiddleware.cs
 │   ├── Properties/
@@ -42,17 +44,22 @@ testmaker_net/
 │   │   │   └── IApplicationDbContext.cs
 │   │   └── Result.cs
 │   ├── Features/
-│   │   └── Classes/
+│   │   ├── Classes/
+│   │   │   ├── Commands/
+│   │   │   │   └── CreateClass/
+│   │   │   └── Queries/
+│   │   │       └── GetAllClasses/
+│   │   └── Subjects/
 │   │       ├── Commands/
+│   │       │   └── CreateSubject/
 │   │       └── Queries/
+│   │           └── GetAllSubjects/
 │   ├── DependencyInjection.cs
 │   └── testmaker.Application.csproj
 ├── testmaker.Domain/
-│   ├── Common/
 │   ├── Entities/
 │   └── testmaker.Domain.csproj
 ├── testmaker.Infrastructure/
-│   ├── Interfaces/
 │   ├── Persistence/
 │   │   ├── Configurations/
 │   │   └── ApplicationDbContext.cs
@@ -83,7 +90,7 @@ These entities are represented as plain domain classes and remain the main sourc
 - `Common/Behaviors/ValidationBehavior.cs` as a MediatR pipeline behavior that runs FluentValidation validators before handlers execute
 - `Common/Result.cs` with `Result` and `Result<T>` for expected business failures
 - `DependencyInjection.cs` with `AddApplication()` for registering MediatR, validators, and pipeline behaviors
-- the first feature slice under `Features/Classes/`
+- the first feature slices under `Features/Classes/` and `Features/Subjects/`
 
 The current error-handling model is hybrid by design:
 
@@ -135,15 +142,16 @@ This is close to the intended inward dependency model, though the API project st
 
 ### Current gap versus target architecture
 
-The main remaining gap is no longer startup wiring. The repository now correctly wires both Application and Infrastructure from the API host, and MediatR is registered from the Application assembly.
+The startup wiring gap is resolved. The repository now correctly wires both Application and Infrastructure from the API host, and MediatR is registered from the Application assembly.
 
 The remaining gap is breadth rather than wiring:
 
-- only the `Classes` feature has been implemented as a vertical slice
-- most of the domain still does not yet have commands, queries, handlers, validators, or endpoints
+- only `Classes` and `Subjects` have partial CQRS (get-all and create only)
+- get-by-id, update, and delete are missing for both implemented features
+- most of the domain (9 of 11 entities) still has no commands, queries, handlers, validators, or endpoints
 - the API still mixes transport mapping with `Result` interpretation in controllers rather than using a broader shared response-mapping abstraction
 
-That distinction matters because the repository should now be described as an early CQRS foundation with one implemented slice, not as an unwired skeleton.
+That distinction matters because the repository should now be described as an early CQRS foundation with two partially implemented slices, not as an unwired skeleton.
 
 ## Persistence Architecture
 
@@ -194,29 +202,31 @@ This gives the repository a clear split:
 
 ## Current Feature Coverage
 
-The first implemented vertical slice is `Classes`.
+Two feature slices are partially implemented: `Classes` and `Subjects`. Both follow the same pattern but are limited to read-all and create operations only. Update, delete, and get-by-id are not yet implemented for either feature.
 
-### Application-side feature implementation
+### Classes feature
 
-`testmaker.Application/Features/Classes` currently contains:
+**Application layer** (`testmaker.Application/Features/Classes`):
+- `GetAllClassesQuery` / handler — returns all classes ordered by name
+- `CreateClassCommand` / handler — creates a new class with duplicate name check
+- `CreateClassCommandValidator` — validates ClassName is not empty
 
-- queries for listing classes and retrieving a class by number
-- commands for creating, updating, and deleting classes
-- handlers for each command and query
-- validators for create and update operations
-- a small DTO for returning class data
+**API layer** (`testmaker.Api/Features/Classes/ClassesController.cs`):
+- `GET /api/classes` — list all classes
+- `POST /api/classes` — create a new class
 
-### API-side feature implementation
+### Subjects feature
 
-`testmaker.Api/Features/Classes/ClassesController.cs` currently exposes:
+**Application layer** (`testmaker.Application/Features/Subjects`):
+- `GetAllSubjectsQuery` / handler — returns all subjects ordered by name
+- `CreateSubjectCommand` / handler — creates a new subject (with duplicate name check)
+- `CreateSubjectCommandValidator` — validates Name is not empty and max 50 chars
 
-- `GET /api/classes`
-- `GET /api/classes/{classNumber}`
-- `POST /api/classes`
-- `PUT /api/classes/{classNumber}`
-- `DELETE /api/classes/{classNumber}`
+**API layer** (`testmaker.Api/Features/Subjects/SubjectsController.cs`):
+- `GET /api/subjects` — list all subjects
+- `POST /api/subjects` — create a new subject
 
-This controller is the current reference implementation for how future features should be added.
+Both controllers are the current reference implementations for how future feature slices should be added, though they are not fully featured (missing get-by-id, update, delete).
 
 ## Intended Target Architecture
 
@@ -257,14 +267,14 @@ This target architecture is now partially implemented. The `Classes` slice follo
 
 ## Current Implementation Status
 
-The repository is best understood as an early but functioning CQRS foundation.
+## Current Implementation Status
 
 ### Already implemented
 
 - solution split into four projects
-- domain entity model
+- domain entity model (11 entities)
 - EF Core `DbContext`
-- entity configurations for the current schema
+- entity configurations for the full DB schema (11 configurations)
 - MySQL provider setup in Infrastructure
 - central package management
 - Application DI registration through `AddApplication()`
@@ -274,13 +284,29 @@ The repository is best understood as an early but functioning CQRS foundation.
 - `IApplicationDbContext` abstraction with `SaveChangesAsync`
 - Infrastructure registration from the API startup path
 - global exception middleware in the API layer
-- first feature slice for `Classes`
-- first API controller and endpoints for `Classes`
+- partial CQRS for `Classes` (get-all, create)
+- partial CQRS for `Subjects` (get-all, create)
+
+### Entity coverage matrix
+
+| Entity | Domain | Config | GetAll | GetById | Create | Update | Delete |
+|---|---|---|---|---|---|---|---|
+| Class | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | ❌ |
+| Subject | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | ❌ |
+| School | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| QuestionType | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| QuestionDifficulty | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| TestType | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| QuestionDetail | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Test | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| QuestionImage | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| TestQuestionMap | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| QuestionSubquestionMap | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
 
 ### Not implemented or still limited
 
-- additional feature slices beyond `Classes`
-- endpoints for schools, subjects, tests, questions, and related mappings
+- get-by-id, update, delete for Classes and Subjects
+- feature slices for Schools, Tests, Questions, and related mappings
 - automated tests for handlers, validators, middleware, and controllers
 - a broader shared convention for translating `Result` values to HTTP responses across all controllers
 
@@ -338,12 +364,13 @@ NuGet package versions are managed centrally through `Directory.Packages.props`.
 
 ## Recommended Next Architecture Steps
 
-1. Add more feature slices such as `Schools`, `Subjects`, and `Tests` using the same Application-plus-API pattern as `Classes`.
-2. Add automated tests for validators, handlers, middleware, and controller behavior.
-3. Introduce a broader shared convention for translating `Result` failures into HTTP responses to reduce repeated controller mapping logic.
-4. Extend the README and contributor guidance as additional feature slices are added so the reference pattern stays current.
-5. Keep the API layer limited to transport concerns, middleware, and endpoint orchestration as more features are added.
+1. Complete existing feature slices by adding get-by-id, update, and delete for `Classes` and `Subjects`.
+2. Add more feature slices such as `Schools`, `Tests`, and `Questions` using the same Application-plus-API pattern.
+3. Standardize error handling with a typed `Result` that carries error codes for proper HTTP status mapping.
+4. Add automated tests for validators, handlers, middleware, and controller behavior.
+5. Extend the README and contributor guidance as additional feature slices are added so the reference pattern stays current.
+6. Keep the API layer limited to transport concerns, middleware, and endpoint orchestration as more features are added.
 
 ## Summary
 
-This repository is currently a layered .NET backend with a working CQRS foundation, central validation, infrastructure wiring, exception middleware, and an initial vertical slice for `Classes`. The target architecture is no longer just aspirational, but it is still only partially implemented across the broader testmaker domain.
+This repository is currently a layered .NET backend with a working CQRS foundation, central validation, infrastructure wiring, exception middleware, and two partial vertical slices for `Classes` and `Subjects`. The target architecture is no longer just aspirational, but it is still only partially implemented across the broader testmaker domain (9 of 11 entities still need feature implementations).

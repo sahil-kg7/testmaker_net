@@ -1,10 +1,10 @@
 using FluentValidation;
 
-namespace testmaker.Application.Features.Classes.Commands.CreateClass;
+namespace testmaker.Application.Features.Classes.Commands.UpdateClass;
 
-public class CreateClassCommandValidator : AbstractValidator<CreateClassCommand>
+public class UpdateClassCommandValidator : AbstractValidator<UpdateClassCommand>
 {
-    public CreateClassCommandValidator()
+    public UpdateClassCommandValidator()
     {
         RuleFor(x => x.ClassName)
             .NotEmpty().WithMessage("ClassName is required.")

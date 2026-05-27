@@ -23,7 +23,7 @@ public class CreateSubjectCommandHandler : IRequestHandler<CreateSubjectCommand,
             .AnyAsync(s => s.Name.ToLower() == normalizedName, cancellationToken);
 
         if (exists)
-            return Result<CreateSubjectResponse>.Failure($"Subject with name '{request.Name}' already exists.");
+            return Result<CreateSubjectResponse>.Failure($"Subject with name '{request.Name}' already exists.", ErrorType.Conflict);
 
         var timestamp = DateTime.UtcNow;
 
