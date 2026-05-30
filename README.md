@@ -329,11 +329,14 @@ The API project reads the database connection string from `testmaker.Api/appsett
 {
 	"ConnectionStrings": {
 		"DefaultConnection": "Server=localhost;Database=testmaker_v2;User=<user>;Password=<password>;"
+	},
+	"Database": {
+		"MySqlServerVersion": "8.0.36"
 	}
 }
 ```
 
-Use local development credentials appropriate to your environment. Avoid committing real credentials into documentation or shared config.
+Use local development credentials appropriate to your environment. Avoid committing real credentials into documentation or shared config. Set `Database:MySqlServerVersion` to the MySQL server version used by your environment; this avoids probing the database during application startup.
 
 ### Launch profiles
 
@@ -347,6 +350,8 @@ The API project includes two local launch profiles:
 ### Current startup behavior
 
 `Program.cs` now registers controllers, Swagger, `AddApplication()`, `AddInfrastructure(builder.Configuration)`, and `ExceptionHandlingMiddleware`. This means the full request path from HTTP endpoint to handler to persistence is wired and runnable.
+
+Swagger is available in the Development environment at `http://localhost:5216/swagger/index.html`. The raw OpenAPI document is available at `http://localhost:5216/swagger/v1/swagger.json`.
 
 ### Current error-handling convention
 
