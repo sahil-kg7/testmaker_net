@@ -11,6 +11,8 @@ public partial class QuestionDetail
 
     public Guid SubjectId { get; set; }
 
+    public Guid ClassId { get; set; }
+
     public Guid Difficulty { get; set; }
 
     public int Marks { get; set; }
@@ -34,6 +36,8 @@ public partial class QuestionDetail
     public string? Assertion { get; set; }
 
     public virtual QuestionDifficulty DifficultyNavigation { get; set; } = null!;
+
+    public virtual Class Class { get; set; } = null!;
 
     public virtual ICollection<QuestionImage> QuestionImages { get; set; } = new List<QuestionImage>();
 

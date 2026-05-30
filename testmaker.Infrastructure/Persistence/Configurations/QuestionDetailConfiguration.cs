@@ -40,6 +40,8 @@ public class QuestionDetailConfiguration : IEntityTypeConfiguration<QuestionDeta
 
         entity.HasIndex(e => e.SubjectId, "fk_ques_details_subject");
 
+    entity.HasIndex(e => e.ClassId, "fk_ques_details_class");
+
         entity.HasIndex(e => e.QuestionTypeId, "question_details_question_type_FK");
 
         entity.Property(e => e.Id)
@@ -47,6 +49,9 @@ public class QuestionDetailConfiguration : IEntityTypeConfiguration<QuestionDeta
             .HasColumnName("id");
         entity.Property(e => e.Assertion).HasColumnName("assertion");
         entity.Property(e => e.Content).HasColumnName("content");
+        entity.Property(e => e.ClassId)
+            .HasMaxLength(36)
+            .HasColumnName("class_id");
         entity.Property(e => e.CreatedOn)
             .HasDefaultValueSql("UTC_TIMESTAMP()")
             .HasColumnType("datetime")
@@ -82,6 +87,11 @@ public class QuestionDetailConfiguration : IEntityTypeConfiguration<QuestionDeta
             .HasDefaultValueSql("UTC_TIMESTAMP()")
             .HasColumnType("datetime")
             .HasColumnName("updated_on");
+
+        entity.HasOne(d => d.Class).WithMany(p => p.QuestionDetails)
+            .HasForeignKey(d => d.ClassId)
+            .OnDelete(DeleteBehavior.ClientSetNull)
+            .HasConstraintName("question_details_class_FK");
 
         entity.HasOne(d => d.DifficultyNavigation).WithMany(p => p.QuestionDetails)
             .HasForeignKey(d => d.Difficulty)

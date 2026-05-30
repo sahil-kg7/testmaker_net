@@ -13,5 +13,7 @@ public partial class Class
 
     public DateTime UpdatedOn { get; set; }
 
+    public virtual ICollection<QuestionDetail> QuestionDetails { get; set; } = new List<QuestionDetail>();
+
     public virtual ICollection<Test> Tests { get; set; } = new List<Test>();
 }

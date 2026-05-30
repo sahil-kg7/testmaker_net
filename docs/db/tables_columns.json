@@ -58,6 +58,14 @@
 	},
 	{
 		"TABLE_NAME" : "question_details",
+		"COLUMN_NAME" : "class_id",
+		"COLUMN_TYPE" : "varchar(36)",
+		"IS_NULLABLE" : "NO",
+		"COLUMN_KEY" : "MUL",
+		"COLUMN_COMMENT" : ""
+	},
+	{
+		"TABLE_NAME" : "question_details",
 		"COLUMN_NAME" : "difficulty",
 		"COLUMN_TYPE" : "varchar(36)",
 		"IS_NULLABLE" : "NO",

@@ -15,6 +15,13 @@
 		"CONSTRAINT_NAME" : "question_details_subject_FK"
 	},
 	{
+		"from_table" : "question_details",
+		"from_column" : "class_id",
+		"to_table" : "class",
+		"to_column" : "id",
+		"CONSTRAINT_NAME" : "question_details_class_FK"
+	},
+	{
 		"from_table" : "question_images",
 		"from_column" : "question_id",
 		"to_table" : "question_details",

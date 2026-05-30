@@ -27,6 +27,7 @@
   id               varchar(36)  [PK]
   question_type_id varchar(36)  [FK]  → question_type.id  NOT NULL
   subject_id       varchar(36)  [FK]  → subject.id         NOT NULL
+  class_id         varchar(36)  [FK]  → class.id           NOT NULL
   difficulty       varchar(36)  [FK]  → question_difficulty.id  NOT NULL
   marks            int                                      NOT NULL
   content?         longtext     -- main question text (nullable: some questions are image-only)
@@ -169,6 +170,7 @@
 ```
 question_details.difficulty        → question_difficulty.id
 question_details.subject_id        → subject.id
+question_details.class_id          → class.id
 
 question_images.question_id        → question_details.id
 
@@ -201,17 +203,19 @@ WHERE t.id = ?
 ORDER BY tqm.question_position;
 ```
 
-**B. Fetch a question with full metadata (type + difficulty + subject):**
+**B. Fetch a question with full metadata (type + difficulty + subject + class):**
 ```sql
 SELECT
   qd.*,
   qt.type        AS question_type,
   qdi.level      AS difficulty_level,
-  s.name         AS subject_name
+  s.name         AS subject_name,
+  c.class_name
 FROM question_details qd
 INNER JOIN question_type       qt  ON qt.id  = qd.question_type_id
 INNER JOIN question_difficulty qdi ON qdi.id = qd.difficulty
 INNER JOIN subject             s   ON s.id   = qd.subject_id
+INNER JOIN class               c   ON c.id   = qd.class_id
 WHERE qd.id = ?;
 ```
 
@@ -268,7 +272,7 @@ WHERE t.school_id  = ?
 ## 6. Query Generation Rules
 
 1. **All FKs in `test` are NOT NULL** — always use INNER JOIN for `school`, `class`, `subject`, `test_type`.
-2. **All FKs in `question_details` are NOT NULL** — use INNER JOIN for `question_type`, `question_difficulty`, and `subject`. All three are DB-enforced.
+2. **All FKs in `question_details` are NOT NULL** — use INNER JOIN for `question_type`, `question_difficulty`, `subject`, and `class`. All four are DB-enforced.
 4. **All PKs across all tables are now `varchar(36)` UUIDs** — including `question_type.id`. Never compare or pass these as integers.
 5. **Check `question_type` before reading JSON columns.** Only read `mcq` for MCQ, `match_a`/`match_b` for Match, `fib_words` for FIB, `reason`/`assertion` for Assertion-Reason.
 6. **Order by position columns**, not `id` or `created_on`:
@@ -284,8 +288,9 @@ WHERE t.school_id  = ?
 ## 7. Data Validation Rules
 
 **When inserting `question_details`:**
-- `question_type_id` must match a `varchar(36)` UUID in `question_type.id` — validate in app code, DB will not enforce
+- `question_type_id` must match a `varchar(36)` UUID in `question_type.id` (DB enforced)
 - `subject_id` must exist in `subject.id` (DB enforced)
+- `class_id` must exist in `class.id` (DB enforced)
 - `difficulty` must exist in `question_difficulty.id` (DB enforced)
 - Populate only the JSON column matching the question type; leave others NULL
 - `content` may be NULL only if at least one image exists in `question_images` for that `question_details.id`
@@ -315,6 +320,7 @@ WHERE t.school_id  = ?
 | v2 → v3 | `question_details.question_type_id` type | `int` | `varchar(36)` |
 | v2 → v3 | `question_details_question_type_FK` | DB-enforced constraint | **removed** — app must validate |
 | v3 → v4 | `question_details_question_type_FK` | removed | **restored** — DB-enforced again |
+| v4 → v5 | `question_details.class_id` | absent | `varchar(36)` NOT NULL FK to `class.id` |
 
 ---
 
@@ -328,6 +334,7 @@ WHERE t.school_id  = ?
                                                                     ├──(INNER)──→ [question_type]       (ref)
                                                                     ├──(INNER)──→ [question_difficulty] (ref)
                                                                     ├──(INNER)──→ [subject]             (ref)
+                                                                    ├──(INNER)──→ [class]               (ref)
                                                                     └──────────→ [question_images]
 
 ```
