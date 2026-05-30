@@ -49,7 +49,7 @@ public class TestConfiguration : IEntityTypeConfiguration<Test>
             .HasMaxLength(36)
             .HasColumnName("class_id");
         entity.Property(e => e.CreatedOn)
-            .HasDefaultValueSql("CURRENT_TIMESTAMP")
+            .HasDefaultValueSql("UTC_TIMESTAMP()")
             .HasColumnType("datetime")
             .HasColumnName("created_on");
         entity.Property(e => e.FileName).HasColumnName("file_name");
@@ -69,8 +69,7 @@ public class TestConfiguration : IEntityTypeConfiguration<Test>
             .HasColumnName("test_type_id");
         entity.Property(e => e.TimeDuration).HasColumnName("time_duration");
         entity.Property(e => e.UpdatedOn)
-            .ValueGeneratedOnAddOrUpdate()
-            .HasDefaultValueSql("CURRENT_TIMESTAMP")
+            .HasDefaultValueSql("UTC_TIMESTAMP()")
             .HasColumnType("datetime")
             .HasColumnName("updated_on");
 

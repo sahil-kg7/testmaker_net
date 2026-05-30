@@ -18,7 +18,7 @@ public class QuestionImageConfiguration : IEntityTypeConfiguration<QuestionImage
             .HasMaxLength(36)
             .HasColumnName("id");
         entity.Property(e => e.CreatedOn)
-            .HasDefaultValueSql("CURRENT_TIMESTAMP")
+            .HasDefaultValueSql("UTC_TIMESTAMP()")
             .HasColumnType("datetime")
             .HasColumnName("created_on");
         entity.Property(e => e.ImageName)
@@ -29,8 +29,7 @@ public class QuestionImageConfiguration : IEntityTypeConfiguration<QuestionImage
             .HasMaxLength(36)
             .HasColumnName("question_id");
         entity.Property(e => e.UpdatedOn)
-            .ValueGeneratedOnAddOrUpdate()
-            .HasDefaultValueSql("CURRENT_TIMESTAMP")
+            .HasDefaultValueSql("UTC_TIMESTAMP()")
             .HasColumnType("datetime")
             .HasColumnName("updated_on");
 

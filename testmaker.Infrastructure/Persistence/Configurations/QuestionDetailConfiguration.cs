@@ -48,7 +48,7 @@ public class QuestionDetailConfiguration : IEntityTypeConfiguration<QuestionDeta
         entity.Property(e => e.Assertion).HasColumnName("assertion");
         entity.Property(e => e.Content).HasColumnName("content");
         entity.Property(e => e.CreatedOn)
-            .HasDefaultValueSql("CURRENT_TIMESTAMP")
+            .HasDefaultValueSql("UTC_TIMESTAMP()")
             .HasColumnType("datetime")
             .HasColumnName("created_on");
         entity.Property(e => e.Difficulty)
@@ -79,8 +79,7 @@ public class QuestionDetailConfiguration : IEntityTypeConfiguration<QuestionDeta
             .HasMaxLength(36)
             .HasColumnName("subject_id");
         entity.Property(e => e.UpdatedOn)
-            .ValueGeneratedOnAddOrUpdate()
-            .HasDefaultValueSql("CURRENT_TIMESTAMP")
+            .HasDefaultValueSql("UTC_TIMESTAMP()")
             .HasColumnType("datetime")
             .HasColumnName("updated_on");
 
