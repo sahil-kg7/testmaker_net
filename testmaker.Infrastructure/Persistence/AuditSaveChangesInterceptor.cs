@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using testmaker.Domain.Entities;
 
 namespace testmaker.Infrastructure.Persistence;
 
@@ -19,6 +20,9 @@ public class AuditSaveChangesInterceptor : SaveChangesInterceptor
         foreach (var entry in context.ChangeTracker.Entries())
         {
             if (entry.Entity is null)
+                continue;
+
+            if (IsDatabaseManagedAuditEntity(entry.Entity))
                 continue;
 
             SetAuditTimestamps(entry, timestamp);
@@ -53,5 +57,14 @@ public class AuditSaveChangesInterceptor : SaveChangesInterceptor
     public override int SavedChanges(SaveChangesCompletedEventData eventData, int result)
     {
         return result;
+    }
+
+    private static bool IsDatabaseManagedAuditEntity(object entity)
+    {
+        return entity is QuestionDetail
+            or QuestionImage
+            or Test
+            or TestQuestionMap
+            or QuestionSubquestionMap;
     }
 }

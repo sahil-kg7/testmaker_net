@@ -23,6 +23,7 @@ public class QuestionSubquestionMapConfiguration : IEntityTypeConfiguration<Ques
             .HasColumnName("id");
         entity.Property(e => e.CreatedOn)
             .HasDefaultValueSql("UTC_TIMESTAMP()")
+            .ValueGeneratedOnAddOrUpdate()
             .HasColumnType("datetime")
             .HasColumnName("created_on");
         entity.Property(e => e.QuestionId)
@@ -37,6 +38,7 @@ public class QuestionSubquestionMapConfiguration : IEntityTypeConfiguration<Ques
             .HasColumnName("test_id");
         entity.Property(e => e.UpdatedOn)
             .HasDefaultValueSql("UTC_TIMESTAMP()")
+            .ValueGeneratedOnAddOrUpdate()
             .HasColumnType("datetime")
             .HasColumnName("updated_on");
 

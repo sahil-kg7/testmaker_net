@@ -40,7 +40,7 @@ public class QuestionDetailConfiguration : IEntityTypeConfiguration<QuestionDeta
 
         entity.HasIndex(e => e.SubjectId, "fk_ques_details_subject");
 
-    entity.HasIndex(e => e.ClassId, "fk_ques_details_class");
+        entity.HasIndex(e => e.ClassId, "fk_ques_details_class");
 
         entity.HasIndex(e => e.QuestionTypeId, "question_details_question_type_FK");
 
@@ -54,6 +54,7 @@ public class QuestionDetailConfiguration : IEntityTypeConfiguration<QuestionDeta
             .HasColumnName("class_id");
         entity.Property(e => e.CreatedOn)
             .HasDefaultValueSql("UTC_TIMESTAMP()")
+            .ValueGeneratedOnAddOrUpdate()
             .HasColumnType("datetime")
             .HasColumnName("created_on");
         entity.Property(e => e.Difficulty)
@@ -85,6 +86,7 @@ public class QuestionDetailConfiguration : IEntityTypeConfiguration<QuestionDeta
             .HasColumnName("subject_id");
         entity.Property(e => e.UpdatedOn)
             .HasDefaultValueSql("UTC_TIMESTAMP()")
+            .ValueGeneratedOnAddOrUpdate()
             .HasColumnType("datetime")
             .HasColumnName("updated_on");
 

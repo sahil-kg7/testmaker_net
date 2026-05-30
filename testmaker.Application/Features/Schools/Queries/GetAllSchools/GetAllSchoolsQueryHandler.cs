@@ -17,8 +17,8 @@ public class GetAllSchoolsQueryHandler : IRequestHandler<GetAllSchoolsQuery, Res
     public async Task<Result<List<SchoolDto>>> Handle(GetAllSchoolsQuery request, CancellationToken cancellationToken)
     {
         var schools = await _context.Schools
-            .OrderBy(s => s.Name)
-            .Select(s => new SchoolDto(s.Id, s.Name, s.LogoFilename, s.CreatedOn, s.UpdatedOn))
+            .OrderBy(entity => entity.Name)
+            .Select(entity => new SchoolDto(entity.Id, entity.Name, entity.LogoFilename, entity.CreatedOn, entity.UpdatedOn))
             .ToListAsync(cancellationToken);
 
         return Result<List<SchoolDto>>.Success(schools);

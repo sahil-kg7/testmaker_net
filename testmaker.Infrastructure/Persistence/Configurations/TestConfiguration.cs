@@ -50,6 +50,7 @@ public class TestConfiguration : IEntityTypeConfiguration<Test>
             .HasColumnName("class_id");
         entity.Property(e => e.CreatedOn)
             .HasDefaultValueSql("UTC_TIMESTAMP()")
+            .ValueGeneratedOnAddOrUpdate()
             .HasColumnType("datetime")
             .HasColumnName("created_on");
         entity.Property(e => e.FileName).HasColumnName("file_name");
@@ -70,6 +71,7 @@ public class TestConfiguration : IEntityTypeConfiguration<Test>
         entity.Property(e => e.TimeDuration).HasColumnName("time_duration");
         entity.Property(e => e.UpdatedOn)
             .HasDefaultValueSql("UTC_TIMESTAMP()")
+            .ValueGeneratedOnAddOrUpdate()
             .HasColumnType("datetime")
             .HasColumnName("updated_on");
 

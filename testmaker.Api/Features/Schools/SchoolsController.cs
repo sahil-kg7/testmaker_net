@@ -29,6 +29,7 @@ public class SchoolsController : ControllerBase
 
         if (result.IsFailure)
             return ErrorToHttp(result);
+
         return Ok(result.Value);
     }
 
