@@ -72,7 +72,7 @@ internal static class QuestionValidator
     /// </summary>
     public static Result ApplyRequest(QuestionDetail entity, QuestionRequest request, string questionTypeName)
     {
-        var questionTypeKind = ParseQuestionTypeKind(questionTypeName);
+        var questionTypeKind = ParseQuestionTypeKindEnum(questionTypeName);
         var validationResult = ValidateTypeSpecificFields(request, questionTypeKind, questionTypeName);
 
         if (validationResult.IsFailure)
@@ -95,17 +95,17 @@ internal static class QuestionValidator
 
         switch (questionTypeKind)
         {
-            case QuestionTypeKind.Mcq:
+            case QuestionType.Mcq:
                 entity.Mcq = NormalizeItems(request.Mcq);
                 break;
-            case QuestionTypeKind.MatchTheFollowing:
+            case QuestionType.MatchTheFollowing:
                 entity.MatchA = NormalizeItems(request.MatchA);
                 entity.MatchB = NormalizeItems(request.MatchB);
                 break;
-            case QuestionTypeKind.FillInTheBlank:
+            case QuestionType.FillInTheBlank:
                 entity.FibWords = NormalizeItems(request.FibWords);
                 break;
-            case QuestionTypeKind.AssertionReason:
+            case QuestionType.AssertionReason:
                 entity.Assertion = NormalizeText(request.Assertion);
                 entity.Reason = NormalizeText(request.Reason);
                 break;
@@ -135,9 +135,58 @@ internal static class QuestionValidator
             .ToList();
     }
 
+    private readonly record struct QuestionFieldState(
+        bool Mcq,
+        bool MatchA,
+        bool MatchB,
+        bool FibWords,
+        bool Reason,
+        bool Assertion);
+
+    [Flags]
+    private enum QuestionFields
+    {
+        None = 0,
+        Mcq = 1,
+        MatchA = 2,
+        MatchB = 4,
+        FibWords = 8,
+        Reason = 16,
+        Assertion = 32,
+    }
+
+    private sealed record TypeRules(
+        QuestionFields RequiredFields,
+        string RequiredFieldsError,
+        QuestionFields ForbiddenFields);
+
+    private static readonly Dictionary<QuestionType, TypeRules> TypeRulesMap = new()
+    {
+        [QuestionType.Mcq] = new TypeRules(
+            RequiredFields: QuestionFields.Mcq,
+            RequiredFieldsError: "MCQ questions require at least one option.",
+            ForbiddenFields: QuestionFields.MatchA | QuestionFields.MatchB | QuestionFields.FibWords | QuestionFields.Reason | QuestionFields.Assertion),
+        [QuestionType.MatchTheFollowing] = new TypeRules(
+            RequiredFields: QuestionFields.MatchA | QuestionFields.MatchB,
+            RequiredFieldsError: "Match the Following questions require both matchA and matchB values.",
+            ForbiddenFields: QuestionFields.Mcq | QuestionFields.FibWords | QuestionFields.Reason | QuestionFields.Assertion),
+        [QuestionType.FillInTheBlank] = new TypeRules(
+            RequiredFields: QuestionFields.FibWords,
+            RequiredFieldsError: "Fill in the Blank questions require fibWords values.",
+            ForbiddenFields: QuestionFields.Mcq | QuestionFields.MatchA | QuestionFields.MatchB | QuestionFields.Reason | QuestionFields.Assertion),
+        [QuestionType.AssertionReason] = new TypeRules(
+            RequiredFields: QuestionFields.Reason | QuestionFields.Assertion,
+            RequiredFieldsError: "Assertion-Reason questions require both assertion and reason.",
+            ForbiddenFields: QuestionFields.Mcq | QuestionFields.MatchA | QuestionFields.MatchB | QuestionFields.FibWords),
+        [QuestionType.Generic] = new TypeRules(
+            RequiredFields: QuestionFields.None,
+            RequiredFieldsError: "",
+            ForbiddenFields: QuestionFields.Mcq | QuestionFields.MatchA | QuestionFields.MatchB | QuestionFields.FibWords | QuestionFields.Reason | QuestionFields.Assertion),
+    };
+
     private static Result ValidateTypeSpecificFields(
         QuestionRequest request,
-        QuestionTypeKind questionTypeKind,
+        QuestionType questionTypeKind,
         string questionTypeName)
     {
         var hasImages = request.Images is { Count: > 0 };
@@ -149,99 +198,53 @@ internal static class QuestionValidator
                 ErrorType.Validation);
         }
 
-        var hasMcq = HasItems(request.Mcq);
-        var hasMatchA = HasItems(request.MatchA);
-        var hasMatchB = HasItems(request.MatchB);
-        var hasFibWords = HasItems(request.FibWords);
-        var hasReason = !string.IsNullOrWhiteSpace(request.Reason);
-        var hasAssertion = !string.IsNullOrWhiteSpace(request.Assertion);
+        var state = new QuestionFieldState(
+            Mcq: HasItems(request.Mcq),
+            MatchA: HasItems(request.MatchA),
+            MatchB: HasItems(request.MatchB),
+            FibWords: HasItems(request.FibWords),
+            Reason: !string.IsNullOrWhiteSpace(request.Reason),
+            Assertion: !string.IsNullOrWhiteSpace(request.Assertion));
 
-        switch (questionTypeKind)
+        var rules = TypeRulesMap[questionTypeKind];
+        var presentFields = ToFieldFlags(state);
+
+        if ((presentFields & rules.RequiredFields) != rules.RequiredFields)
         {
-            case QuestionTypeKind.Mcq:
-                if (!hasMcq)
-                {
-                    return Result.Failure("MCQ questions require at least one option.", ErrorType.Validation);
-                }
+            return Result.Failure(rules.RequiredFieldsError, ErrorType.Validation);
+        }
 
-                if (hasMatchA || hasMatchB || hasFibWords || hasReason || hasAssertion)
-                {
-                    return Result.Failure(
-                        $"Question type '{questionTypeName}' only supports the mcq field.",
-                        ErrorType.Validation);
-                }
+        if ((presentFields & rules.ForbiddenFields) != 0)
+        {
+            return Result.Failure(
+                $"Question type '{questionTypeName}' only supports its designated fields.",
+                ErrorType.Validation);
+        }
 
-                break;
-            case QuestionTypeKind.MatchTheFollowing:
-                if (!hasMatchA || !hasMatchB)
-                {
-                    return Result.Failure(
-                        "Match the Following questions require both matchA and matchB values.",
-                        ErrorType.Validation);
-                }
-
-                if (NormalizeItems(request.MatchA)!.Count != NormalizeItems(request.MatchB)!.Count)
-                {
-                    return Result.Failure(
-                        "Match the Following questions require matchA and matchB to have the same number of entries.",
-                        ErrorType.Validation);
-                }
-
-                if (hasMcq || hasFibWords || hasReason || hasAssertion)
-                {
-                    return Result.Failure(
-                        $"Question type '{questionTypeName}' only supports the matchA and matchB fields.",
-                        ErrorType.Validation);
-                }
-
-                break;
-            case QuestionTypeKind.FillInTheBlank:
-                if (!hasFibWords)
-                {
-                    return Result.Failure(
-                        "Fill in the Blank questions require fibWords values.",
-                        ErrorType.Validation);
-                }
-
-                if (hasMcq || hasMatchA || hasMatchB || hasReason || hasAssertion)
-                {
-                    return Result.Failure(
-                        $"Question type '{questionTypeName}' only supports the fibWords field.",
-                        ErrorType.Validation);
-                }
-
-                break;
-            case QuestionTypeKind.AssertionReason:
-                if (!hasAssertion || !hasReason)
-                {
-                    return Result.Failure(
-                        "Assertion-Reason questions require both assertion and reason.",
-                        ErrorType.Validation);
-                }
-
-                if (hasMcq || hasMatchA || hasMatchB || hasFibWords)
-                {
-                    return Result.Failure(
-                        $"Question type '{questionTypeName}' only supports the assertion and reason fields.",
-                        ErrorType.Validation);
-                }
-
-                break;
-            default:
-                if (hasMcq || hasMatchA || hasMatchB || hasFibWords || hasReason || hasAssertion)
-                {
-                    return Result.Failure(
-                        $"Question type '{questionTypeName}' does not support conditional question payload fields.",
-                        ErrorType.Validation);
-                }
-
-                break;
+        if (questionTypeKind == QuestionType.MatchTheFollowing
+            && NormalizeItems(request.MatchA)!.Count != NormalizeItems(request.MatchB)!.Count)
+        {
+            return Result.Failure(
+                "Match the Following questions require matchA and matchB to have the same number of entries.",
+                ErrorType.Validation);
         }
 
         return Result.Success();
     }
 
-    private static QuestionTypeKind ParseQuestionTypeKind(string questionTypeName)
+    private static QuestionFields ToFieldFlags(QuestionFieldState state)
+    {
+        var flags = QuestionFields.None;
+        if (state.Mcq) flags |= QuestionFields.Mcq;
+        if (state.MatchA) flags |= QuestionFields.MatchA;
+        if (state.MatchB) flags |= QuestionFields.MatchB;
+        if (state.FibWords) flags |= QuestionFields.FibWords;
+        if (state.Reason) flags |= QuestionFields.Reason;
+        if (state.Assertion) flags |= QuestionFields.Assertion;
+        return flags;
+    }
+
+    private static QuestionType ParseQuestionTypeKindEnum(string questionTypeName)
     {
         var normalized = new string(questionTypeName
             .Where(char.IsLetterOrDigit)
@@ -250,12 +253,12 @@ internal static class QuestionValidator
 
         return normalized switch
         {
-            "mcq" => QuestionTypeKind.Mcq,
-            "matchthefollowing" => QuestionTypeKind.MatchTheFollowing,
-            "fillintheblank" => QuestionTypeKind.FillInTheBlank,
-            "fib" => QuestionTypeKind.FillInTheBlank,
-            "assertionreason" => QuestionTypeKind.AssertionReason,
-            _ => QuestionTypeKind.Generic
+            "mcq" => QuestionType.Mcq,
+            "matchthefollowing" => QuestionType.MatchTheFollowing,
+            "fillintheblank" => QuestionType.FillInTheBlank,
+            "fib" => QuestionType.FillInTheBlank,
+            "assertionreason" => QuestionType.AssertionReason,
+            _ => QuestionType.Generic
         };
     }
 
