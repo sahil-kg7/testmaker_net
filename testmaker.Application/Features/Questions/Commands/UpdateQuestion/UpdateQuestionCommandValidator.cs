@@ -11,6 +11,6 @@ public sealed class UpdateQuestionCommandValidator : AbstractValidator<UpdateQue
             .NotEmpty().WithMessage("Id is required.");
 
         RuleFor(command => command.Question)
-            .SetValidator(new QuestionPayloadValidator());
+            .SetValidator(new QuestionRequestValidator());
     }
 }

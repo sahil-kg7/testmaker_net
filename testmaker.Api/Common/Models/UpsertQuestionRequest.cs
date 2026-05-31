@@ -1,4 +1,4 @@
-using testmaker.Application.Features.Questions.Common;
+using testmaker.Application.Features.Questions.Contracts;
 
 namespace testmaker.Api.Common.Models;
 
@@ -17,9 +17,9 @@ public sealed record UpsertQuestionRequest(
     string? Assertion,
     IReadOnlyList<QuestionImageRequest>? Images)
 {
-    public QuestionPayload ToPayload()
+    public QuestionRequest ToRequest()
     {
-        return new QuestionPayload(
+        return new QuestionRequest(
             QuestionTypeId,
             SubjectId,
             ClassId,
@@ -32,6 +32,6 @@ public sealed record UpsertQuestionRequest(
             FibWords,
             Reason,
             Assertion,
-            Images?.Select(image => new QuestionImageInput(image.ImageName)).ToList());
+            Images?.Select(image => new Application.Features.Questions.Contracts.QuestionImageRequest(image.ImageName)).ToList());
     }
 }

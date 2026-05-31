@@ -1,33 +1,34 @@
 using FluentValidation;
+using testmaker.Application.Features.Questions.Contracts;
 
 namespace testmaker.Application.Features.Questions.Common;
 
-public sealed class QuestionPayloadValidator : AbstractValidator<QuestionPayload>
+public sealed class QuestionRequestValidator : AbstractValidator<QuestionRequest>
 {
-    public QuestionPayloadValidator()
+    public QuestionRequestValidator()
     {
-        RuleFor(payload => payload.QuestionTypeId)
+        RuleFor(request => request.QuestionTypeId)
             .NotEmpty().WithMessage("QuestionTypeId is required.");
 
-        RuleFor(payload => payload.SubjectId)
+        RuleFor(request => request.SubjectId)
             .NotEmpty().WithMessage("SubjectId is required.");
 
-        RuleFor(payload => payload.ClassId)
+        RuleFor(request => request.ClassId)
             .NotEmpty().WithMessage("ClassId is required.");
 
-        RuleFor(payload => payload.Difficulty)
+        RuleFor(request => request.Difficulty)
             .NotEmpty().WithMessage("Difficulty is required.");
 
-        RuleFor(payload => payload.Marks)
+        RuleFor(request => request.Marks)
             .GreaterThan(0).WithMessage("Marks must be greater than 0.");
 
-        RuleFor(payload => payload)
-            .Must(payload =>
-                !string.IsNullOrWhiteSpace(payload.Content) ||
-                payload.Images is { Count: > 0 })
+        RuleFor(request => request)
+            .Must(request =>
+                !string.IsNullOrWhiteSpace(request.Content) ||
+                request.Images is { Count: > 0 })
             .WithMessage("Content is required unless at least one image is provided.");
 
-        RuleForEach(payload => payload.Images)
+        RuleForEach(request => request.Images)
             .ChildRules(image =>
             {
                 image.RuleFor(item => item.ImageName)
@@ -36,16 +37,16 @@ public sealed class QuestionPayloadValidator : AbstractValidator<QuestionPayload
                     .Must(BeSafeImageName).WithMessage("ImageName must be a file name without path segments.");
             });
 
-        RuleForEach(payload => payload.Mcq)
+        RuleForEach(request => request.Mcq)
             .NotEmpty().WithMessage("MCQ values must not be empty.");
 
-        RuleForEach(payload => payload.MatchA)
+        RuleForEach(request => request.MatchA)
             .NotEmpty().WithMessage("MatchA values must not be empty.");
 
-        RuleForEach(payload => payload.MatchB)
+        RuleForEach(request => request.MatchB)
             .NotEmpty().WithMessage("MatchB values must not be empty.");
 
-        RuleForEach(payload => payload.FibWords)
+        RuleForEach(request => request.FibWords)
             .NotEmpty().WithMessage("FibWords values must not be empty.");
     }
 

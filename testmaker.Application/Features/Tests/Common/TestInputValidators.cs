@@ -14,7 +14,7 @@ internal sealed class TestSubquestionInputValidator : AbstractValidator<TestSubq
         When(input => input.NewQuestion is not null, () =>
         {
             RuleFor(input => input.NewQuestion!)
-                .SetValidator(new QuestionPayloadValidator());
+                .SetValidator(new QuestionRequestValidator());
         });
     }
 
@@ -35,7 +35,7 @@ internal sealed class TestQuestionInputValidator : AbstractValidator<TestQuestio
         When(input => input.NewQuestion is not null, () =>
         {
             RuleFor(input => input.NewQuestion!)
-                .SetValidator(new QuestionPayloadValidator());
+                .SetValidator(new QuestionRequestValidator());
         });
 
         RuleForEach(input => input.SubQuestions)

@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using testmaker.Application.Common;
 using testmaker.Application.Common.Interfaces;
 using testmaker.Application.Features.Questions.Common;
+using testmaker.Application.Features.Questions.Contracts;
 using testmaker.Domain.Entities;
 
 namespace testmaker.Application.Features.Questions.Commands.CreateQuestion;
@@ -18,7 +19,7 @@ public sealed class CreateQuestionCommandHandler : IRequestHandler<CreateQuestio
 
     public async Task<Result<QuestionDto>> Handle(CreateQuestionCommand request, CancellationToken cancellationToken)
     {
-        var referenceValidation = await QuestionContracts.ValidateReferencesAsync(
+        var referenceValidation = await QuestionValidator.ValidateReferencesAsync(
             request.Question,
             _context,
             cancellationToken);
@@ -33,13 +34,13 @@ public sealed class CreateQuestionCommandHandler : IRequestHandler<CreateQuestio
             Id = Guid.NewGuid()
         };
 
-        var payloadResult = QuestionContracts.ApplyPayload(entity, request.Question, referenceValidation.Value!);
+        var payloadResult = QuestionValidator.ApplyRequest(entity, request.Question, referenceValidation.Value!);
         if (payloadResult.IsFailure)
         {
             return Result<QuestionDto>.Failure(payloadResult.Error!, payloadResult.ErrorType);
         }
 
-        var images = QuestionContracts.CreateImageEntities(entity.Id, request.Question.Images);
+        var images = QuestionValidator.CreateImageEntities(entity.Id, request.Question.Images);
 
         _context.QuestionDetails.Add(entity);
         if (images.Count > 0)
@@ -49,9 +50,9 @@ public sealed class CreateQuestionCommandHandler : IRequestHandler<CreateQuestio
 
         await _context.SaveChangesAsync(cancellationToken);
 
-        var createdQuestion = await QuestionContracts.BuildDetailQuery(_context)
+        var createdQuestion = await QuestionMapper.BuildDetailQuery(_context)
             .FirstAsync(question => question.Id == entity.Id, cancellationToken);
 
-        return Result<QuestionDto>.Success(QuestionContracts.ToQuestionDto(createdQuestion));
+        return Result<QuestionDto>.Success(QuestionMapper.ToDto(createdQuestion));
     }
 }

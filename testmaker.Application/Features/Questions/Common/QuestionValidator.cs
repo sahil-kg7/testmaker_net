@@ -1,155 +1,91 @@
 using Microsoft.EntityFrameworkCore;
 using testmaker.Application.Common;
 using testmaker.Application.Common.Interfaces;
+using testmaker.Application.Features.Questions.Contracts;
 using testmaker.Domain.Entities;
 
 namespace testmaker.Application.Features.Questions.Common;
 
-public sealed record QuestionImageInput(string ImageName);
-
-public sealed record QuestionPayload(
-    Guid QuestionTypeId,
-    Guid SubjectId,
-    Guid ClassId,
-    Guid Difficulty,
-    int Marks,
-    string? Content,
-    IReadOnlyList<string>? Mcq,
-    IReadOnlyList<string>? MatchA,
-    IReadOnlyList<string>? MatchB,
-    IReadOnlyList<string>? FibWords,
-    string? Reason,
-    string? Assertion,
-    IReadOnlyList<QuestionImageInput>? Images);
-
-public sealed record QuestionImageDto(Guid Id, string ImageName, int ImagePosition);
-
-public sealed record QuestionDto(
-    Guid Id,
-    Guid QuestionTypeId,
-    string QuestionType,
-    Guid SubjectId,
-    string SubjectName,
-    Guid ClassId,
-    string ClassName,
-    Guid Difficulty,
-    string DifficultyLevel,
-    int Marks,
-    string? Content,
-    IReadOnlyList<string>? Mcq,
-    IReadOnlyList<string>? MatchA,
-    IReadOnlyList<string>? MatchB,
-    IReadOnlyList<string>? FibWords,
-    string? Reason,
-    string? Assertion,
-    IReadOnlyList<QuestionImageDto> Images,
-    DateTime CreatedOn,
-    DateTime UpdatedOn);
-
-public sealed record QuestionListItemDto(
-    Guid Id,
-    Guid QuestionTypeId,
-    string QuestionType,
-    Guid SubjectId,
-    string SubjectName,
-    Guid ClassId,
-    string ClassName,
-    Guid Difficulty,
-    string DifficultyLevel,
-    int Marks,
-    string? ContentPreview,
-    bool HasImages,
-    DateTime CreatedOn,
-    DateTime UpdatedOn);
-
-internal enum QuestionTypeKind
+/// <summary>
+/// Handles validation and entity population for questions.
+/// Contains business logic for applying question payloads to entities.
+/// </summary>
+internal static class QuestionValidator
 {
-    Generic,
-    Mcq,
-    MatchTheFollowing,
-    FillInTheBlank,
-    AssertionReason
-}
-
-internal static class QuestionContracts
-{
-    public static IQueryable<QuestionDetail> BuildDetailQuery(IApplicationDbContext context)
-    {
-        return context.QuestionDetails
-            .AsNoTracking()
-            .Include(question => question.QuestionType)
-            .Include(question => question.Subject)
-            .Include(question => question.Class)
-            .Include(question => question.DifficultyNavigation)
-            .Include(question => question.QuestionImages);
-    }
-
+    /// <summary>
+    /// Validates that all referenced entities (question type, subject, class, difficulty) exist.
+    /// Returns the question type name if validation passes.
+    /// </summary>
     public static async Task<Result<string>> ValidateReferencesAsync(
-        QuestionPayload payload,
+        QuestionRequest request,
         IApplicationDbContext context,
         CancellationToken cancellationToken)
     {
         var questionType = await context.QuestionTypes
-            .Where(entity => entity.Id == payload.QuestionTypeId)
+            .Where(entity => entity.Id == request.QuestionTypeId)
             .Select(entity => entity.Type)
             .FirstOrDefaultAsync(cancellationToken);
 
         if (questionType is null)
         {
             return Result<string>.Failure(
-                $"Question type '{payload.QuestionTypeId}' was not found.",
+                $"Question type '{request.QuestionTypeId}' was not found.",
                 ErrorType.Validation);
         }
 
         var subjectExists = await context.Subjects
-            .AnyAsync(entity => entity.Id == payload.SubjectId, cancellationToken);
+            .AnyAsync(entity => entity.Id == request.SubjectId, cancellationToken);
 
         if (!subjectExists)
         {
             return Result<string>.Failure(
-                $"Subject '{payload.SubjectId}' was not found.",
+                $"Subject '{request.SubjectId}' was not found.",
                 ErrorType.Validation);
         }
 
         var classExists = await context.Classes
-            .AnyAsync(entity => entity.Id == payload.ClassId, cancellationToken);
+            .AnyAsync(entity => entity.Id == request.ClassId, cancellationToken);
 
         if (!classExists)
         {
             return Result<string>.Failure(
-                $"Class '{payload.ClassId}' was not found.",
+                $"Class '{request.ClassId}' was not found.",
                 ErrorType.Validation);
         }
 
         var difficultyExists = await context.QuestionDifficulties
-            .AnyAsync(entity => entity.Id == payload.Difficulty, cancellationToken);
+            .AnyAsync(entity => entity.Id == request.Difficulty, cancellationToken);
 
         if (!difficultyExists)
         {
             return Result<string>.Failure(
-                $"Question difficulty '{payload.Difficulty}' was not found.",
+                $"Question difficulty '{request.Difficulty}' was not found.",
                 ErrorType.Validation);
         }
 
         return Result<string>.Success(questionType);
     }
 
-    public static Result ApplyPayload(QuestionDetail entity, QuestionPayload payload, string questionTypeName)
+    /// <summary>
+    /// Applies the question request data to a QuestionDetail entity.
+    /// Validates type-specific fields and normalizes text values.
+    /// </summary>
+    public static Result ApplyRequest(QuestionDetail entity, QuestionRequest request, string questionTypeName)
     {
         var questionTypeKind = ParseQuestionTypeKind(questionTypeName);
-        var validationResult = ValidateTypeSpecificFields(payload, questionTypeKind, questionTypeName);
+        var validationResult = ValidateTypeSpecificFields(request, questionTypeKind, questionTypeName);
 
         if (validationResult.IsFailure)
         {
             return validationResult;
         }
 
-        entity.QuestionTypeId = payload.QuestionTypeId;
-        entity.SubjectId = payload.SubjectId;
-        entity.ClassId = payload.ClassId;
-        entity.Difficulty = payload.Difficulty;
-        entity.Marks = payload.Marks;
-        entity.Content = NormalizeText(payload.Content);
+        entity.QuestionTypeId = request.QuestionTypeId;
+        entity.SubjectId = request.SubjectId;
+        entity.ClassId = request.ClassId;
+        entity.Difficulty = request.Difficulty;
+        entity.Marks = request.Marks;
+        entity.Content = NormalizeText(request.Content);
         entity.Mcq = null;
         entity.MatchA = null;
         entity.MatchB = null;
@@ -160,25 +96,28 @@ internal static class QuestionContracts
         switch (questionTypeKind)
         {
             case QuestionTypeKind.Mcq:
-                entity.Mcq = NormalizeItems(payload.Mcq);
+                entity.Mcq = NormalizeItems(request.Mcq);
                 break;
             case QuestionTypeKind.MatchTheFollowing:
-                entity.MatchA = NormalizeItems(payload.MatchA);
-                entity.MatchB = NormalizeItems(payload.MatchB);
+                entity.MatchA = NormalizeItems(request.MatchA);
+                entity.MatchB = NormalizeItems(request.MatchB);
                 break;
             case QuestionTypeKind.FillInTheBlank:
-                entity.FibWords = NormalizeItems(payload.FibWords);
+                entity.FibWords = NormalizeItems(request.FibWords);
                 break;
             case QuestionTypeKind.AssertionReason:
-                entity.Assertion = NormalizeText(payload.Assertion);
-                entity.Reason = NormalizeText(payload.Reason);
+                entity.Assertion = NormalizeText(request.Assertion);
+                entity.Reason = NormalizeText(request.Reason);
                 break;
         }
 
         return Result.Success();
     }
 
-    public static List<QuestionImage> CreateImageEntities(Guid questionId, IReadOnlyList<QuestionImageInput>? images)
+    /// <summary>
+    /// Creates QuestionImage entities from the request images.
+    /// </summary>
+    public static List<QuestionImage> CreateImageEntities(Guid questionId, IReadOnlyList<QuestionImageRequest>? images)
     {
         if (images is null || images.Count == 0)
         {
@@ -196,93 +135,26 @@ internal static class QuestionContracts
             .ToList();
     }
 
-    public static QuestionDto ToQuestionDto(QuestionDetail entity)
-    {
-        var orderedImages = entity.QuestionImages
-            .OrderBy(image => image.ImagePosition)
-            .Select(image => new QuestionImageDto(image.Id, image.ImageName, image.ImagePosition))
-            .ToList();
-
-        return new QuestionDto(
-            entity.Id,
-            entity.QuestionTypeId,
-            entity.QuestionType.Type,
-            entity.SubjectId,
-            entity.Subject.Name,
-            entity.ClassId,
-            entity.Class.ClassName,
-            entity.Difficulty,
-            entity.DifficultyNavigation.Level,
-            entity.Marks,
-            entity.Content,
-            entity.Mcq,
-            entity.MatchA,
-            entity.MatchB,
-            entity.FibWords,
-            entity.Reason,
-            entity.Assertion,
-            orderedImages,
-            entity.CreatedOn,
-            entity.UpdatedOn);
-    }
-
-    public static QuestionListItemDto ToQuestionListItemDto(QuestionDetail entity)
-    {
-        return new QuestionListItemDto(
-            entity.Id,
-            entity.QuestionTypeId,
-            entity.QuestionType.Type,
-            entity.SubjectId,
-            entity.Subject.Name,
-            entity.ClassId,
-            entity.Class.ClassName,
-            entity.Difficulty,
-            entity.DifficultyNavigation.Level,
-            entity.Marks,
-            BuildContentPreview(entity.Content),
-            entity.QuestionImages.Count > 0,
-            entity.CreatedOn,
-            entity.UpdatedOn);
-    }
-
-    public static string? BuildContentPreview(string? content)
-    {
-        if (string.IsNullOrWhiteSpace(content))
-        {
-            return null;
-        }
-
-        const int maxLength = 140;
-
-        var normalized = content.Trim();
-        if (normalized.Length <= maxLength)
-        {
-            return normalized;
-        }
-
-        return $"{normalized[..(maxLength - 3)]}...";
-    }
-
     private static Result ValidateTypeSpecificFields(
-        QuestionPayload payload,
+        QuestionRequest request,
         QuestionTypeKind questionTypeKind,
         string questionTypeName)
     {
-        var hasImages = payload.Images is { Count: > 0 };
+        var hasImages = request.Images is { Count: > 0 };
 
-        if (string.IsNullOrWhiteSpace(payload.Content) && !hasImages)
+        if (string.IsNullOrWhiteSpace(request.Content) && !hasImages)
         {
             return Result.Failure(
                 "Question content is required unless at least one image is provided.",
                 ErrorType.Validation);
         }
 
-        var hasMcq = HasItems(payload.Mcq);
-        var hasMatchA = HasItems(payload.MatchA);
-        var hasMatchB = HasItems(payload.MatchB);
-        var hasFibWords = HasItems(payload.FibWords);
-        var hasReason = !string.IsNullOrWhiteSpace(payload.Reason);
-        var hasAssertion = !string.IsNullOrWhiteSpace(payload.Assertion);
+        var hasMcq = HasItems(request.Mcq);
+        var hasMatchA = HasItems(request.MatchA);
+        var hasMatchB = HasItems(request.MatchB);
+        var hasFibWords = HasItems(request.FibWords);
+        var hasReason = !string.IsNullOrWhiteSpace(request.Reason);
+        var hasAssertion = !string.IsNullOrWhiteSpace(request.Assertion);
 
         switch (questionTypeKind)
         {
@@ -308,7 +180,7 @@ internal static class QuestionContracts
                         ErrorType.Validation);
                 }
 
-                if (NormalizeItems(payload.MatchA)!.Count != NormalizeItems(payload.MatchB)!.Count)
+                if (NormalizeItems(request.MatchA)!.Count != NormalizeItems(request.MatchB)!.Count)
                 {
                     return Result.Failure(
                         "Match the Following questions require matchA and matchB to have the same number of entries.",

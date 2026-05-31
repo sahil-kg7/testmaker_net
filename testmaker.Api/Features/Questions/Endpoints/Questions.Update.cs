@@ -1,7 +1,7 @@
 using MediatR;
 using testmaker.Api.Common;
 using testmaker.Api.Common.Models;
-using testmaker.Application.Features.Questions.Common;
+using testmaker.Application.Features.Questions.Contracts;
 using testmaker.Application.Features.Questions.Commands.UpdateQuestion;
 
 namespace testmaker.Api.Features.Questions.Endpoints;
@@ -12,7 +12,7 @@ public static class QuestionsUpdate
     {
         return app.MapPut("/{id:guid}", async (Guid id, UpsertQuestionRequest request, ISender sender, CancellationToken ct) =>
         {
-            var command = new UpdateQuestionCommand(id, request.ToPayload());
+            var command = new UpdateQuestionCommand(id, request.ToRequest());
             var result = await sender.Send(command, ct);
             return result.IsSuccess
                 ? Results.Ok(result.Value)

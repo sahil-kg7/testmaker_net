@@ -7,7 +7,7 @@ This README documents two things separately:
 1. The architecture that exists in the repository today.
 2. The intended target architecture discussed during project design.
 
-That split is deliberate. The codebase now has working startup wiring, MediatR-based request handling, validation behavior, exception middleware, and a first vertical slice for Classes, while the broader domain is still being migrated into the same pattern.
+That split is deliberate. The codebase now has working startup wiring, MediatR-based request handling, validation behavior, exception middleware, and five complete vertical slices for Classes, Schools, Subjects, Questions, and Tests.
 
 ## Architecture Overview
 
@@ -16,7 +16,7 @@ The solution currently follows a layered structure:
 - `testmaker.Domain`: core entity model.
 - `testmaker.Application`: commands, queries, handlers, validators, behaviors, shared result types, and application abstractions.
 - `testmaker.Infrastructure`: EF Core persistence, database configuration, and infrastructure DI registration.
-- `testmaker.Api`: ASP.NET Core host, controllers, middleware, Swagger, and top-level HTTP pipeline.
+- `testmaker.Api`: ASP.NET Core host, endpoints, middleware, Swagger, and top-level HTTP pipeline.
 
 The long-term direction remains a cleaner CQRS-based structure where the API project contains endpoints only, the Application project contains commands, queries, handlers, and validators organized by feature, the Domain project contains entities and core rules, and Infrastructure implements persistence and external services.
 
@@ -25,16 +25,78 @@ The long-term direction remains a cleaner CQRS-based structure where the API pro
 ```text
 testmaker_net/
 ├── testmaker.Api/
+│   ├── Common/
+│   │   ├── ApiResult.cs
+│   │   └── Models/
+│   │       ├── UpsertQuestionRequest.cs      # API-layer transport DTO
+│   │       └── UpsertTestRequest.cs          # API-layer transport DTO
 │   ├── Features/
 │   │   ├── Classes/
-│   │   │   └── ClassesController.cs
-│   │   └── Subjects/
-│   │       └── SubjectsController.cs
+│   │   │   ├── Endpoints/
+│   │   │   │   ├── Classes.Create.cs
+│   │   │   │   ├── Classes.Delete.cs
+│   │   │   │   ├── Classes.GetAll.cs
+│   │   │   │   ├── Classes.GetById.cs
+│   │   │   │   └── Classes.Update.cs
+│   │   │   ├── Models/
+│   │   │   │   ├── CreateClassRequest.cs
+│   │   │   │   └── UpdateClassRequest.cs
+│   │   │   └── ClassEndpoints.cs
+│   │   ├── Schools/
+│   │   │   ├── Endpoints/
+│   │   │   │   ├── Schools.Create.cs
+│   │   │   │   ├── Schools.Delete.cs
+│   │   │   │   ├── Schools.GetAll.cs
+│   │   │   │   ├── Schools.GetById.cs
+│   │   │   │   └── Schools.Update.cs
+│   │   │   ├── Models/
+│   │   │   │   ├── CreateSchoolRequest.cs
+│   │   │   │   └── UpdateSchoolRequest.cs
+│   │   │   └── SchoolEndpoints.cs
+│   │   ├── Subjects/
+│   │   │   ├── Endpoints/
+│   │   │   │   ├── Subjects.Create.cs
+│   │   │   │   ├── Subjects.Delete.cs
+│   │   │   │   ├── Subjects.GetAll.cs
+│   │   │   │   ├── Subjects.GetById.cs
+│   │   │   │   └── Subjects.Update.cs
+│   │   │   ├── Models/
+│   │   │   │   ├── CreateSubjectRequest.cs
+│   │   │   │   └── UpdateSubjectRequest.cs
+│   │   │   └── SubjectEndpoints.cs
+│   │   ├── Questions/
+│   │   │   ├── Endpoints/
+│   │   │   │   ├── Questions.Create.cs
+│   │   │   │   ├── Questions.Delete.cs
+│   │   │   │   ├── Questions.GetAll.cs
+│   │   │   │   ├── Questions.GetById.cs
+│   │   │   │   └── Questions.Update.cs
+│   │   │   └── QuestionEndpoints.cs
+│   │   ├── Tests/
+│   │   │   ├── Endpoints/
+│   │   │   │   ├── Tests.Create.cs
+│   │   │   │   ├── Tests.Delete.cs
+│   │   │   │   ├── Tests.GetAll.cs
+│   │   │   │   ├── Tests.GetById.cs
+│   │   │   │   └── Tests.Update.cs
+│   │   │   ├── Models/
+│   │   │   │   └── UpsertTestRequest.cs
+│   │   │   └── TestEndpoints.cs
+│   │   ├── QuestionTypes/
+│   │   │   ├── Endpoints/
+│   │   │   │   └── QuestionTypes.GetAll.cs
+│   │   │   └── QuestionTypeEndpoints.cs
+│   │   ├── QuestionDifficulties/
+│   │   │   ├── Endpoints/
+│   │   │   │   └── QuestionDifficulties.GetAll.cs
+│   │   │   └── QuestionDifficultyEndpoints.cs
+│   │   └── TestTypes/
+│   │       ├── Endpoints/
+│   │       │   └── TestTypes.GetAll.cs
+│   │       └── TestTypeEndpoints.cs
 │   ├── Middleware/
 │   │   └── ExceptionHandlingMiddleware.cs
-│   ├── Properties/
 │   ├── Program.cs
-│   ├── appsettings.json
 │   └── testmaker.Api.csproj
 ├── testmaker.Application/
 │   ├── Common/
@@ -46,14 +108,32 @@ testmaker_net/
 │   ├── Features/
 │   │   ├── Classes/
 │   │   │   ├── Commands/
-│   │   │   │   └── CreateClass/
+│   │   │   ├── Contracts/
 │   │   │   └── Queries/
-│   │   │       └── GetAllClasses/
-│   │   └── Subjects/
-│   │       ├── Commands/
-│   │       │   └── CreateSubject/
+│   │   ├── Schools/
+│   │   │   ├── Commands/
+│   │   │   ├── Contracts/
+│   │   │   └── Queries/
+│   │   ├── Subjects/
+│   │   │   ├── Commands/
+│   │   │   ├── Contracts/
+│   │   │   └── Queries/
+│   │   ├── Questions/
+│   │   │   ├── Commands/
+│   │   │   ├── Common/
+│   │   │   ├── Contracts/
+│   │   │   └── Queries/
+│   │   ├── Tests/
+│   │   │   ├── Commands/
+│   │   │   ├── Common/
+│   │   │   ├── Contracts/
+│   │   │   └── Queries/
+│   │   ├── QuestionTypes/
+│   │   │   └── Queries/
+│   │   ├── QuestionDifficulties/
+│   │   │   └── Queries/
+│   │   └── TestTypes/
 │   │       └── Queries/
-│   │           └── GetAllSubjects/
 │   ├── DependencyInjection.cs
 │   └── testmaker.Application.csproj
 ├── testmaker.Domain/
@@ -90,7 +170,16 @@ These entities are represented as plain domain classes and remain the main sourc
 - `Common/Behaviors/ValidationBehavior.cs` as a MediatR pipeline behavior that runs FluentValidation validators before handlers execute
 - `Common/Result.cs` with `Result` and `Result<T>` for expected business failures
 - `DependencyInjection.cs` with `AddApplication()` for registering MediatR, validators, and pipeline behaviors
-- the first feature slices under `Features/Classes/` and `Features/Subjects/`
+- feature slices under `Features/` organized by domain concept: `Classes`, `Schools`, `Subjects`, `Questions`, `Tests`, `QuestionTypes`, `QuestionDifficulties`, `TestTypes`
+
+Each feature slice follows a consistent structure separating data shapes from business logic:
+
+- **Contracts/** — pure record types defining DTOs (request and response types). No logic.
+- **Common/** — business logic shared across commands/queries: mapper, validators, enums.
+- **Commands/** — write operations (Create, Update, Delete).
+- **Queries/** — read operations (GetAll, GetById).
+
+This separation enables the API layer to remain thin: it only translates between HTTP transport DTOs and Application-layer contracts.
 
 The current error-handling model is hybrid by design:
 
@@ -119,9 +208,16 @@ Infrastructure uses EF Core with Pomelo for MySQL and central package management
 - OpenAPI/Swagger registration
 - startup wiring for `AddApplication()` and `AddInfrastructure(builder.Configuration)`
 - global exception handling through `ExceptionHandlingMiddleware`
-- the first feature controller: `Features/Classes/ClassesController.cs`
+- feature endpoints organized under `Features/{Feature}/Endpoints/`
 
-The current API layer is still intentionally thin. Controllers dispatch commands and queries through `ISender` and translate `Result` failures into HTTP responses, while middleware handles validation and unexpected exceptions centrally.
+The API layer is intentionally thin. Each endpoint:
+
+1. Deserializes the HTTP request into an API-layer request DTO
+2. Maps it to an Application-layer command/query
+3. Sends via MediatR
+4. Maps the `Result` back to an HTTP response
+
+**Key principle:** API-layer request DTOs handle HTTP transport concerns (serialization, naming conventions). Application-layer contracts handle business logic concerns (what the handler needs).
 
 ## Dependency Direction
 
@@ -144,14 +240,12 @@ This is close to the intended inward dependency model, though the API project st
 
 The startup wiring gap is resolved. The repository now correctly wires both Application and Infrastructure from the API host, and MediatR is registered from the Application assembly.
 
-The remaining gap is breadth rather than wiring:
+Five feature slices (`Classes`, `Schools`, `Subjects`, `Questions`, `Tests`) are fully implemented with get-all, get-by-id, create, update, and delete. Three additional features (`QuestionTypes`, `QuestionDifficulties`, `TestTypes`) have read-only endpoints. The Contract separation pattern (`Contracts/` for DTOs, `Common/` for business logic) is established as the standard approach.
 
-- only `Classes` and `Subjects` have partial CQRS (get-all and create only)
-- get-by-id, update, and delete are missing for both implemented features
-- most of the domain (9 of 11 entities) still has no commands, queries, handlers, validators, or endpoints
-- the API still mixes transport mapping with `Result` interpretation in controllers rather than using a broader shared response-mapping abstraction
+The remaining gap is breadth:
 
-That distinction matters because the repository should now be described as an early CQRS foundation with two partially implemented slices, not as an unwired skeleton.
+- automated tests for handlers, validators, middleware, and endpoints are not yet in place
+- a broader shared convention for translating `Result` values to HTTP responses across all endpoints
 
 ## Persistence Architecture
 
@@ -202,31 +296,105 @@ This gives the repository a clear split:
 
 ## Current Feature Coverage
 
-Two feature slices are partially implemented: `Classes` and `Subjects`. Both follow the same pattern but are limited to read-all and create operations only. Update, delete, and get-by-id are not yet implemented for either feature.
+Eight feature slices exist: `Classes`, `Schools`, `Subjects`, `Questions`, `Tests`, `QuestionTypes`, `QuestionDifficulties`, and `TestTypes`.
 
 ### Classes feature
 
 **Application layer** (`testmaker.Application/Features/Classes`):
 - `GetAllClassesQuery` / handler — returns all classes ordered by name
-- `CreateClassCommand` / handler — creates a new class with duplicate name check
+- `GetClassByIdQuery` / handler — returns a single class
+- `CreateClassCommand` / handler — creates a new class
+- `UpdateClassCommand` / handler — updates an existing class
+- `DeleteClassCommand` / handler — deletes a class
 - `CreateClassCommandValidator` — validates ClassName is not empty
 
-**API layer** (`testmaker.Api/Features/Classes/ClassesController.cs`):
+**API layer** (`testmaker.Api/Features/Classes/Endpoints/`):
 - `GET /api/classes` — list all classes
+- `GET /api/classes/{id}` — get class by ID
 - `POST /api/classes` — create a new class
+- `PUT /api/classes/{id}` — update an existing class
+- `DELETE /api/classes/{id}` — delete a class
+
+### Schools feature
+
+**Application layer** (`testmaker.Application/Features/Schools`):
+- `GetAllSchoolsQuery` / handler — returns all schools ordered by name
+- `GetSchoolByIdQuery` / handler — returns a single school
+- `CreateSchoolCommand` / handler — creates a new school
+- `UpdateSchoolCommand` / handler — updates an existing school
+- `DeleteSchoolCommand` / handler — deletes a school
+
+**API layer** (`testmaker.Api/Features/Schools/Endpoints/`):
+- `GET /api/schools` — list all schools
+- `GET /api/schools/{id}` — get school by ID
+- `POST /api/schools` — create a new school
+- `PUT /api/schools/{id}` — update an existing school
+- `DELETE /api/schools/{id}` — delete a school
 
 ### Subjects feature
 
 **Application layer** (`testmaker.Application/Features/Subjects`):
 - `GetAllSubjectsQuery` / handler — returns all subjects ordered by name
-- `CreateSubjectCommand` / handler — creates a new subject (with duplicate name check)
-- `CreateSubjectCommandValidator` — validates Name is not empty and max 50 chars
+- `GetSubjectByIdQuery` / handler — returns a single subject
+- `CreateSubjectCommand` / handler — creates a new subject
+- `UpdateSubjectCommand` / handler — updates an existing subject
+- `DeleteSubjectCommand` / handler — deletes a subject
 
-**API layer** (`testmaker.Api/Features/Subjects/SubjectsController.cs`):
+**API layer** (`testmaker.Api/Features/Subjects/Endpoints/`):
 - `GET /api/subjects` — list all subjects
+- `GET /api/subjects/{id}` — get subject by ID
 - `POST /api/subjects` — create a new subject
+- `PUT /api/subjects/{id}` — update an existing subject
+- `DELETE /api/subjects/{id}` — delete a subject
 
-Both controllers are the current reference implementations for how future feature slices should be added, though they are not fully featured (missing get-by-id, update, delete).
+### Questions feature
+
+**Application layer** (`testmaker.Application/Features/Questions`):
+- `GetAllQuestionsQuery` / handler — returns questions with filtering
+- `GetQuestionByIdQuery` / handler — returns a single question with images
+- `CreateQuestionCommand` / handler — creates a new question with images
+- `UpdateQuestionCommand` / handler — updates an existing question
+- `DeleteQuestionCommand` / handler — deletes a question
+- `QuestionValidator` — validates references (type, difficulty, class, subject)
+- `QuestionMapper` — entity ↔ DTO mapping
+- `QuestionRequestValidator` — FluentValidation for the request DTO
+- `Contracts/` — `QuestionRequest`, `QuestionDto`, `QuestionListItemDto`, `QuestionImageRequest`, `QuestionImageDto`
+
+**API layer** (`testmaker.Api/Features/Questions/Endpoints/`):
+- `GET /api/questions` — list questions with optional filters
+- `GET /api/questions/{id}` — get question by ID
+- `POST /api/questions` — create a new question
+- `PUT /api/questions/{id}` — update an existing question
+- `DELETE /api/questions/{id}` — delete a question
+
+### Tests feature
+
+**Application layer** (`testmaker.Application/Features/Tests`):
+- `GetAllTestsQuery` / handler — returns paginated tests with optional filters
+- `GetTestByIdQuery` / handler — returns a single test with questions
+- `CreateTestCommand` / handler — creates a new test with inline or existing questions
+- `UpdateTestCommand` / handler — updates an existing test
+- `DeleteTestCommand` / handler — deletes a test
+- `TestValidator` — validates references (school, class, subject, test type) and sections
+- `TestMapper` — loads test detail with questions and subquestions
+- `TestAssemblyBuilder` — populates test-question and subquestion maps
+- `Contracts/` — `TestDetailDto`, `TestListItemDto`, `TestQuestionBriefDto`, `TestSubquestionBriefDto`, `TestQuestionInput`, `TestSubquestionInput`
+
+**API layer** (`testmaker.Api/Features/Tests/Endpoints/`):
+- `GET /api/tests` — list tests with optional filters and pagination
+- `GET /api/tests/{id}` — get test by ID
+- `POST /api/tests` — create a new test
+- `PUT /api/tests/{id}` — update an existing test
+- `DELETE /api/tests/{id}` — delete a test
+
+### QuestionTypes, QuestionDifficulties, TestTypes features
+
+These three features currently have read-only endpoints (GetAll only):
+
+**API layer:**
+- `GET /api/questiontypes` — list all question types
+- `GET /api/questiondifficulties` — list all question difficulties
+- `GET /api/testtypes` — list all test types
 
 ## Intended Target Architecture
 
@@ -241,19 +409,25 @@ The original design discussion for this project points toward a stricter Clean A
 
 ### Target feature organization
 
-The intended structure is vertical by feature inside the Application layer, for example:
+The intended structure is vertical by feature inside the Application layer, separating data shapes from business logic:
 
 ```text
-testmaker.Application/
-├── Features/
-│   ├── Tests/
-│   │   ├── Commands/
-│   │   └── Queries/
-│   ├── Questions/
-│   │   ├── Commands/
-│   │   └── Queries/
-│   └── ...
-└── Common/
+testmaker.Application/Features/{Feature}/
+├── Commands/                    # Write operations
+│   └── {Operation}/
+│       ├── {Operation}Command.cs
+│       ├── {Operation}CommandHandler.cs
+│       └── {Operation}CommandValidator.cs
+├── Queries/                     # Read operations
+│   └── {Query}/
+│       ├── {Query}Query.cs
+│       └── {Query}QueryHandler.cs
+├── Contracts/                   # Pure data shapes (DTOs)
+│   ├── {Entity}Request.cs       # Input DTO
+│   └── {Entity}Dto.cs           # Output DTO
+└── Common/                      # Shared business logic
+    ├── {Entity}Mapper.cs        # Entity ↔ DTO mapping
+    └── {Entity}Validator.cs     # Reference validation
 ```
 
 In that model:
@@ -263,9 +437,7 @@ In that model:
 - validation behaviors run centrally
 - Infrastructure stays behind abstractions defined by Application
 
-This target architecture is now partially implemented. The `Classes` slice follows the intended direction, but most of the domain has not yet been migrated into that same structure.
-
-## Current Implementation Status
+This target architecture is now partially implemented. The `Classes`, `Schools`, `Subjects`, `Questions`, and `Tests` slices follow the intended direction. The `QuestionTypes`, `QuestionDifficulties`, and `TestTypes` features currently have read-only endpoints.
 
 ## Current Implementation Status
 
@@ -284,35 +456,38 @@ This target architecture is now partially implemented. The `Classes` slice follo
 - `IApplicationDbContext` abstraction with `SaveChangesAsync`
 - Infrastructure registration from the API startup path
 - global exception middleware in the API layer
-- partial CQRS for `Classes` (get-all, create)
-- partial CQRS for `Subjects` (get-all, create)
+- full CQRS for `Classes` (get-all, get-by-id, create, update, delete)
+- full CQRS for `Schools` (get-all, get-by-id, create, update, delete)
+- full CQRS for `Subjects` (get-all, get-by-id, create, update, delete)
+- full CQRS for `Questions` (get-all, get-by-id, create, update, delete)
+- full CQRS for `Tests` (get-all, get-by-id, create, update, delete)
+- read-only endpoints for `QuestionTypes`, `QuestionDifficulties`, `TestTypes` (get-all only)
+- Contract separation pattern: `Contracts/` for DTOs, `Common/` for business logic
 
 ### Entity coverage matrix
 
 | Entity | Domain | Config | GetAll | GetById | Create | Update | Delete |
 |---|---|---|---|---|---|---|---|
-| Class | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | ❌ |
-| Subject | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | ❌ |
-| School | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| QuestionType | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| QuestionDifficulty | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| TestType | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| QuestionDetail | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Test | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| QuestionImage | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| TestQuestionMap | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| QuestionSubquestionMap | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Class | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Subject | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| School | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| QuestionType | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
+| QuestionDifficulty | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
+| TestType | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
+| QuestionDetail | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Test | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| QuestionImage | ✅ | ✅ | — | — | ✅ | ✅ | ✅ |
+| TestQuestionMap | ✅ | ✅ | — | — | ✅ | ✅ | ✅ |
+| QuestionSubquestionMap | ✅ | ✅ | — | — | ✅ | ✅ | ✅ |
 
 ### Not implemented or still limited
 
-- get-by-id, update, delete for Classes and Subjects
-- feature slices for Schools, Tests, Questions, and related mappings
-- automated tests for handlers, validators, middleware, and controllers
-- a broader shared convention for translating `Result` values to HTTP responses across all controllers
+- automated tests for handlers, validators, middleware, and endpoints
+- a broader shared convention for translating `Result` values to HTTP responses across all endpoints
 
 ### Why this matters for contributors
 
-New contributors should treat the current codebase as a working backend foundation rather than only a persistence skeleton. The core request flow is now established, and the `Classes` feature should be used as the reference pattern for future slices.
+New contributors should treat the current codebase as a working backend foundation with five complete vertical slices and three read-only features. The `Classes`, `Schools`, `Subjects`, `Questions`, and `Tests` features should be used as reference patterns for future slices. The Contract separation pattern (`Contracts/` for DTOs, `Common/` for business logic) is the standard approach for all features.
 
 ## Local Configuration
 
@@ -369,13 +544,10 @@ NuGet package versions are managed centrally through `Directory.Packages.props`.
 
 ## Recommended Next Architecture Steps
 
-1. Complete existing feature slices by adding get-by-id, update, and delete for `Classes` and `Subjects`.
-2. Add more feature slices such as `Schools`, `Tests`, and `Questions` using the same Application-plus-API pattern.
-3. Standardize error handling with a typed `Result` that carries error codes for proper HTTP status mapping.
-4. Add automated tests for validators, handlers, middleware, and controller behavior.
-5. Extend the README and contributor guidance as additional feature slices are added so the reference pattern stays current.
-6. Keep the API layer limited to transport concerns, middleware, and endpoint orchestration as more features are added.
+1. Add automated tests for validators, handlers, middleware, and endpoints.
+2. Standardize error handling with a typed `Result` that carries error codes for proper HTTP status mapping.
+3. Keep the API layer limited to transport concerns, middleware, and endpoint orchestration as more features are added.
 
 ## Summary
 
-This repository is currently a layered .NET backend with a working CQRS foundation, central validation, infrastructure wiring, exception middleware, and two partial vertical slices for `Classes` and `Subjects`. The target architecture is no longer just aspirational, but it is still only partially implemented across the broader testmaker domain (9 of 11 entities still need feature implementations).
+This repository is currently a layered .NET backend with a working CQRS foundation, central validation, infrastructure wiring, exception middleware, five complete vertical slices (`Classes`, `Schools`, `Subjects`, `Questions`, `Tests`), and three read-only features (`QuestionTypes`, `QuestionDifficulties`, `TestTypes`). The Contract separation pattern (`Contracts/` for DTOs, `Common/` for business logic) is the standard approach for all features.

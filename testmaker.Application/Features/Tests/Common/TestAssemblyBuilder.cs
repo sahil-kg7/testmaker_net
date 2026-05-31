@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using testmaker.Application.Common;
 using testmaker.Application.Common.Interfaces;
 using testmaker.Application.Features.Questions.Common;
+using testmaker.Application.Features.Questions.Contracts;
 using testmaker.Domain.Entities;
 
 namespace testmaker.Application.Features.Tests.Common;
@@ -81,7 +82,7 @@ internal static class TestAssemblyBuilder
 
     private static async Task<Result<Guid>> ResolveQuestionIdAsync(
         Guid? existingQuestionId,
-        QuestionPayload? newQuestion,
+        QuestionRequest? newQuestion,
         Guid classId,
         Guid subjectId,
         IApplicationDbContext context,
@@ -127,7 +128,7 @@ internal static class TestAssemblyBuilder
                 ErrorType.Validation);
         }
 
-        var referenceValidation = await QuestionContracts.ValidateReferencesAsync(
+        var referenceValidation = await QuestionValidator.ValidateReferencesAsync(
             newQuestion,
             context,
             cancellationToken);
@@ -142,7 +143,7 @@ internal static class TestAssemblyBuilder
             Id = Guid.NewGuid()
         };
 
-        var payloadResult = QuestionContracts.ApplyPayload(entity, newQuestion, referenceValidation.Value!);
+        var payloadResult = QuestionValidator.ApplyRequest(entity, newQuestion, referenceValidation.Value!);
         if (payloadResult.IsFailure)
         {
             return Result<Guid>.Failure(payloadResult.Error!, payloadResult.ErrorType);
@@ -150,7 +151,7 @@ internal static class TestAssemblyBuilder
 
         context.QuestionDetails.Add(entity);
 
-        var images = QuestionContracts.CreateImageEntities(entity.Id, newQuestion.Images);
+        var images = QuestionValidator.CreateImageEntities(entity.Id, newQuestion.Images);
         if (images.Count > 0)
         {
             context.QuestionImages.AddRange(images);

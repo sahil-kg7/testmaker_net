@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using testmaker.Application.Common;
 using testmaker.Application.Common.Interfaces;
 using testmaker.Application.Features.Questions.Common;
+using testmaker.Application.Features.Questions.Contracts;
 
 namespace testmaker.Application.Features.Questions.Queries.GetQuestionById;
 
@@ -17,7 +18,7 @@ public sealed class GetQuestionByIdQueryHandler : IRequestHandler<GetQuestionByI
 
     public async Task<Result<QuestionDto>> Handle(GetQuestionByIdQuery request, CancellationToken cancellationToken)
     {
-        var question = await QuestionContracts.BuildDetailQuery(_context)
+        var question = await QuestionMapper.BuildDetailQuery(_context)
             .FirstOrDefaultAsync(entity => entity.Id == request.Id, cancellationToken);
 
         if (question is null)
@@ -27,6 +28,6 @@ public sealed class GetQuestionByIdQueryHandler : IRequestHandler<GetQuestionByI
                 ErrorType.NotFound);
         }
 
-        return Result<QuestionDto>.Success(QuestionContracts.ToQuestionDto(question));
+        return Result<QuestionDto>.Success(QuestionMapper.ToDto(question));
     }
 }

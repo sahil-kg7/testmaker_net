@@ -8,6 +8,6 @@ public sealed class CreateQuestionCommandValidator : AbstractValidator<CreateQue
     public CreateQuestionCommandValidator()
     {
         RuleFor(command => command.Question)
-            .SetValidator(new QuestionPayloadValidator());
+            .SetValidator(new QuestionRequestValidator());
     }
 }

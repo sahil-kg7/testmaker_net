@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using testmaker.Application.Common;
 using testmaker.Application.Common.Interfaces;
 using testmaker.Application.Features.Questions.Common;
+using testmaker.Application.Features.Questions.Contracts;
 
 namespace testmaker.Application.Features.Questions.Commands.UpdateQuestion;
 
@@ -28,7 +29,7 @@ public sealed class UpdateQuestionCommandHandler : IRequestHandler<UpdateQuestio
                 ErrorType.NotFound);
         }
 
-        var referenceValidation = await QuestionContracts.ValidateReferencesAsync(
+        var referenceValidation = await QuestionValidator.ValidateReferencesAsync(
             request.Question,
             _context,
             cancellationToken);
@@ -38,7 +39,7 @@ public sealed class UpdateQuestionCommandHandler : IRequestHandler<UpdateQuestio
             return Result<QuestionDto>.Failure(referenceValidation.Error!, referenceValidation.ErrorType);
         }
 
-        var payloadResult = QuestionContracts.ApplyPayload(entity, request.Question, referenceValidation.Value!);
+        var payloadResult = QuestionValidator.ApplyRequest(entity, request.Question, referenceValidation.Value!);
         if (payloadResult.IsFailure)
         {
             return Result<QuestionDto>.Failure(payloadResult.Error!, payloadResult.ErrorType);
@@ -49,7 +50,7 @@ public sealed class UpdateQuestionCommandHandler : IRequestHandler<UpdateQuestio
             _context.QuestionImages.RemoveRange(entity.QuestionImages);
         }
 
-        var images = QuestionContracts.CreateImageEntities(entity.Id, request.Question.Images);
+        var images = QuestionValidator.CreateImageEntities(entity.Id, request.Question.Images);
         if (images.Count > 0)
         {
             _context.QuestionImages.AddRange(images);
@@ -57,9 +58,9 @@ public sealed class UpdateQuestionCommandHandler : IRequestHandler<UpdateQuestio
 
         await _context.SaveChangesAsync(cancellationToken);
 
-        var updatedQuestion = await QuestionContracts.BuildDetailQuery(_context)
+        var updatedQuestion = await QuestionMapper.BuildDetailQuery(_context)
             .FirstAsync(question => question.Id == entity.Id, cancellationToken);
 
-        return Result<QuestionDto>.Success(QuestionContracts.ToQuestionDto(updatedQuestion));
+        return Result<QuestionDto>.Success(QuestionMapper.ToDto(updatedQuestion));
     }
 }

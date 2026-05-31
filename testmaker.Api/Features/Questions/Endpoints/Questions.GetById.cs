@@ -1,6 +1,6 @@
 using MediatR;
 using testmaker.Api.Common;
-using testmaker.Application.Features.Questions.Common;
+using testmaker.Application.Features.Questions.Contracts;
 using testmaker.Application.Features.Questions.Queries.GetQuestionById;
 
 namespace testmaker.Api.Features.Questions.Endpoints;

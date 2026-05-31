@@ -1,5 +1,5 @@
 using testmaker.Api.Common.Models;
-using testmaker.Application.Features.Questions.Common;
+using testmaker.Application.Features.Questions.Contracts;
 using testmaker.Application.Features.Tests.Common;
 
 namespace testmaker.Api.Features.Tests.Models;
@@ -30,7 +30,7 @@ internal static class TestMapping
     {
         return new TestQuestionInput(
             request.ExistingQuestionId,
-            request.NewQuestion?.ToPayload(),
+            request.NewQuestion?.ToRequest(),
             request.SubQuestions?.Select(ToInput).ToList());
     }
 
@@ -38,6 +38,6 @@ internal static class TestMapping
     {
         return new TestSubquestionInput(
             request.ExistingQuestionId,
-            request.NewQuestion?.ToPayload());
+            request.NewQuestion?.ToRequest());
     }
 }

@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using testmaker.Application.Common;
 using testmaker.Application.Common.Interfaces;
 using testmaker.Application.Features.Questions.Common;
+using testmaker.Application.Features.Questions.Contracts;
 
 namespace testmaker.Application.Features.Questions.Queries.GetQuestions;
 
@@ -19,7 +20,7 @@ public sealed class GetQuestionsQueryHandler : IRequestHandler<GetQuestionsQuery
         GetQuestionsQuery request,
         CancellationToken cancellationToken)
     {
-        var query = QuestionContracts.BuildDetailQuery(_context);
+        var query = QuestionMapper.BuildDetailQuery(_context);
 
         if (request.ClassId.HasValue)
         {
@@ -75,7 +76,7 @@ public sealed class GetQuestionsQueryHandler : IRequestHandler<GetQuestionsQuery
         var questions = await query.ToListAsync(cancellationToken);
 
         return Result<List<QuestionListItemDto>>.Success(
-            questions.Select(QuestionContracts.ToQuestionListItemDto).ToList());
+            questions.Select(QuestionMapper.ToListItemDto).ToList());
     }
 
     private static string EscapeLikePattern(string value)

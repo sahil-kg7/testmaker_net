@@ -2,14 +2,15 @@ using Microsoft.EntityFrameworkCore;
 using testmaker.Application.Common;
 using testmaker.Application.Common.Interfaces;
 using testmaker.Application.Features.Questions.Common;
+using testmaker.Application.Features.Questions.Contracts;
 
 namespace testmaker.Application.Features.Tests.Common;
 
-public sealed record TestSubquestionInput(Guid? ExistingQuestionId, QuestionPayload? NewQuestion);
+public sealed record TestSubquestionInput(Guid? ExistingQuestionId, QuestionRequest? NewQuestion);
 
 public sealed record TestQuestionInput(
     Guid? ExistingQuestionId,
-    QuestionPayload? NewQuestion,
+    QuestionRequest? NewQuestion,
     IReadOnlyList<TestSubquestionInput>? SubQuestions);
 
 public sealed record TestListItemDto(
@@ -160,7 +161,7 @@ internal static class TestContracts
 
         var questionLookup = questionIds.Count == 0
             ? new Dictionary<Guid, Domain.Entities.QuestionDetail>()
-            : await QuestionContracts.BuildDetailQuery(context)
+            : await QuestionMapper.BuildDetailQuery(context)
                 .Where(entity => questionIds.Contains(entity.Id))
                 .ToDictionaryAsync(entity => entity.Id, cancellationToken);
 
@@ -176,7 +177,7 @@ internal static class TestContracts
                         return new TestSubquestionBriefDto(
                             entity.SubquestionId,
                             entity.SubquestionNumber,
-                            QuestionContracts.BuildContentPreview(question.Content),
+                            QuestionMapper.BuildContentPreview(question.Content),
                             question.Marks);
                     })
                     .ToList()
@@ -198,7 +199,7 @@ internal static class TestContracts
                     question.QuestionType.Type,
                     question.DifficultyNavigation.Level,
                     question.Marks,
-                    QuestionContracts.BuildContentPreview(question.Content),
+                    QuestionMapper.BuildContentPreview(question.Content),
                     question.QuestionImages.Count > 0,
                     subquestions);
             })
